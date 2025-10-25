@@ -1,5 +1,5 @@
 {
-  "extend": "../tsconfig.json",
+  "extends": "../tsconfig.json",
   "files": [],
   "references": [
     {
@@ -8,11 +8,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
-  }
+  ]
 }

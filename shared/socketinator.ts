@@ -1,5 +1,5 @@
-import { type Color } from "chess.js";
-import type { Outcome } from "./chess";
+import type { Color } from "chess.js";
+import type { GameType, Outcome } from "./chess";
 import type { User } from "./entity";
 import type { WSCommand } from "@socketinator/sdk/server";
 
@@ -15,15 +15,6 @@ type ChessClientCommands =
 
 export type ClientsCommands = ChessClientCommands;
 
-export type ClientsEnvelopes = {
-  group: "chess";
-  command: ChessClientCommands;
-};
-
-export interface ClientsEnvelopesWithUserId extends ClientsEnvelopes {
-  userId: User["id"];
-}
-
 export type ChessServerCommands =
   | CommonChessCommands
   | WSCommand<"end", { winner: User["id"] | null; outcome: Outcome }>
@@ -32,8 +23,33 @@ export type ChessServerCommands =
   | WSCommand<"move", { move: string; timers: Record<Color, number> }>
   | WSCommand<"start", { opponent: User; color: Color; gameId: string }>;
 
-export type ServerEnvelopes = {
+export type CommonHubCommand = WSCommand<"quit-transfert", {}>;
+
+export type HubClientCommands =
+  | CommonHubCommand
+  | WSCommand<"join", { gameType: GameType }>;
+
+export type ServerEnvelopes = { userId: User["id"] } & (
+  | {
+      group: "chess";
+      command: ChessServerCommands;
+    }
+  | {
+      group: "hub";
+      command: CommonHubCommand;
+    }
+);
+
+export type ClientsEnvelopes =
+  | {
+      group: "chess";
+      command: ChessClientCommands;
+    }
+  | {
+      group: "hub";
+      command: HubClientCommands;
+    };
+
+export interface ClientsEnvelopesWithUserId extends ClientsEnvelopes {
   userId: User["id"];
-  group: "chess";
-  command: ChessServerCommands;
-};
+}

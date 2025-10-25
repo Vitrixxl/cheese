@@ -1,4 +1,7 @@
-export type { User } from "@backend/src/lib/auth";
+import { User } from "better-auth";
+import { Group } from "@backend/lib/db/schema";
+export type { User } from "@backend/lib/auth";
+
 export type {
   Game,
   Chat,
@@ -8,4 +11,8 @@ export type {
   GroupUser,
   Message,
   FriendRequests,
-} from "@backend/src/lib/db/schema";
+} from "@backend/lib/db/schema";
+
+export interface GroupWithUsers extends Group {
+  users: User[];
+}

@@ -1,13 +1,14 @@
 import { atom } from "jotai";
 import type { ReactNode } from "react";
-type WindowsAtom = {
+export type WindowAtom = {
   id: string;
-  title: string;
-  icon: ReactNode;
   initialWidth: number;
   initialHeight: number;
+  title: string;
+  onClose?: () => void;
+  icon?: ReactNode;
   children: ReactNode;
-  onClose: () => void;
-  close: () => void;
-}[];
-export const windowsAtom = atom<WindowsAtom>([]);
+  noResize?: boolean;
+  fitSize?: boolean;
+};
+export const windowsAtom = atom<WindowAtom[]>([]);

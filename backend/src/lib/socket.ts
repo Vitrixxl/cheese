@@ -7,6 +7,7 @@ import {
 import z from "zod";
 import { User } from "./auth";
 import { Color } from "chess.js";
+import { GAME_TYPES } from "@backend/routes/chess";
 
 export type ChessServerCommands =
   | CommonChessCommands
@@ -23,6 +24,20 @@ export type ServerEnvelopes = {
 };
 
 const readEnvelopes = {
+  hub: {
+    "join-queue": {
+      schema: z.object({
+        gameType: z.literal(
+          Object.entries(GAME_TYPES)
+            .map(([_, k]) => k)
+            .flat(),
+        ),
+      }),
+    },
+    "quit-queue": {
+      schema: z.object({}),
+    },
+  },
   chess: {
     move: {
       schema: z.object({

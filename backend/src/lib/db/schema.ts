@@ -117,12 +117,16 @@ export const friend = sqliteTable("friend", {
 export type Friends = typeof friend.$inferSelect;
 
 export const friendRequests = sqliteTable("friend_request", {
+  id: integer().primaryKey({ autoIncrement: true }),
   from: text()
     .notNull()
     .references(() => user.id),
   to: text()
     .notNull()
     .references(() => user.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 export type FriendRequests = typeof friendRequests.$inferSelect;
 
@@ -136,16 +140,21 @@ export const group = sqliteTable("group", {
 export type Group = typeof group.$inferSelect;
 
 export const groupRequest = sqliteTable("group_request", {
+  id: integer().primaryKey({ autoIncrement: true }),
   from: text()
     .notNull()
     .references(() => user.id),
   to: text()
     .notNull()
     .references(() => user.id),
-  groupId: integer()
+  groupId: integer("group_id")
     .notNull()
     .references(() => group.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
+export type GroupRequest = typeof groupRequest.$inferSelect;
 
 export const groupUser = sqliteTable(
   "group_user",
@@ -173,7 +182,9 @@ export type Chat = typeof chat.$inferSelect;
 
 export const message = sqliteTable("message", {
   id: integer().primaryKey({ autoIncrement: true }),
-  chatId: integer().references(() => chat.id),
+  chatId: integer()
+    .references(() => chat.id)
+    .notNull(),
   content: text(),
   gameId: integer().references(() => game.id),
 });

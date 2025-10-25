@@ -7,7 +7,10 @@ export const authMacro = new Elysia().macro({
       const session = await auth.api.getSession({
         headers,
       });
-      if (!session) return status(401);
+      if (!session)
+        return status(401, {
+          message: "Unauthorized",
+        });
       return {
         user: session.user,
         session: session.session,

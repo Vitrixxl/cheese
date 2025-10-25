@@ -4,6 +4,7 @@ import * as schema from "./db/schema";
 import { db } from "./db";
 
 export const auth = betterAuth({
+  trustedOrigins: ["http://localhost:5173"],
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema,
@@ -11,18 +12,19 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       elo: {
-        type: "string",
+        type: "number",
         default: 500,
         input: false,
       },
     },
   },
-  // socialProviders: {
-  //   google: {
-  //     clientId: process.env.GITHUB_CLIENT_ID as string,
-  //     clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-  //   },
-  // },
+  socialProviders: {
+    google: {
+      clientId: Bun.env.AUTH_GOOGLE_ID as string,
+      clientSecret: Bun.env.AUTH_GOOGLE_SECRET as string,
+      redirectURI: "http://localhost:5173",
+    },
+  },
 });
 
 export type Auth = typeof auth;
