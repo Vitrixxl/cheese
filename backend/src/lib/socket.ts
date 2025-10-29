@@ -1,4 +1,4 @@
-import { CommonChessCommands, Outcome } from "@shared";
+import { CommonChessCommands, Outcome, ServerEnvelopes } from "@shared";
 import { WSCommand } from "@socketinator/sdk/server";
 import {
   Socketinator,
@@ -7,7 +7,7 @@ import {
 import z from "zod";
 import { User } from "./auth";
 import { Color } from "chess.js";
-import { GAME_TYPES } from "@backend/routes/chess";
+import { GAME_TYPES } from "@shared";
 
 export type ChessServerCommands =
   | CommonChessCommands
@@ -16,12 +16,6 @@ export type ChessServerCommands =
   | WSCommand<"reconnection", null>
   | WSCommand<"move", { move: string; timers: Record<Color, number> }>
   | WSCommand<"start", { opponent: User; color: Color; gameId: string }>;
-
-export type ServerEnvelopes = {
-  userId: User["id"];
-  group: "chess";
-  command: ChessServerCommands;
-};
 
 const readEnvelopes = {
   hub: {
@@ -37,6 +31,21 @@ const readEnvelopes = {
     "quit-queue": {
       schema: z.object({}),
     },
+    challenge: {
+      schema: z.object({
+        challengeId: z.string(),
+        gameType: z.literal(
+          Object.entries(GAME_TYPES)
+            .map(([_, k]) => k)
+            .flat(),
+        ),
+        userId: z.number(),
+      }),
+    },
+    "request-challenges": {
+      schema: z.object(),
+    },
+    "cancel-challenge": { schema: z.object({ userId: z.string() }) },
   },
   chess: {
     move: {

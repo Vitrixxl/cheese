@@ -13,6 +13,7 @@ import {
   chat,
   friend,
   friendRequests,
+  game,
   Group,
   group,
   groupRequest,
@@ -351,8 +352,9 @@ export const getChatMessagesPaginated = async (
   if (!canRead) throw new Error("Forbidden");
 
   const rows = await db
-    .select()
+    .select({ ...getTableColumns(message), game: game.id })
     .from(message)
+    .leftJoin(game, eq(game.id, message.gameId))
     .where(
       cursor !== undefined
         ? and(eq(message.chatId, chatId), lt(message.id, cursor))

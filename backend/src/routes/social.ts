@@ -408,17 +408,20 @@ export const socialRoutes = new Elysia({ prefix: "social" })
 
   .get(
     "/chats/:id/messages",
-    async ({ params: { id }, user, set, query: { limit, cursor } }) => {
+    async ({ params: { id }, user, status, query: { limit, cursor } }) => {
       try {
         return await getChatMessagesPaginated(user.id, id, limit, cursor);
       } catch (error) {
         const message = (error as Error).message;
         if (message === "Forbidden") {
-          set.status = 403;
+          return status(403, {
+            message: "not your chat",
+          });
         } else {
-          set.status = 404;
+          return status(403, {
+            message: "not a chat",
+          });
         }
-        return { message };
       }
     },
     {

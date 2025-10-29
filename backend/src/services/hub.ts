@@ -4,7 +4,12 @@ import { startGame } from "./chess";
 import { db } from "@backend/lib/db";
 import { eq } from "drizzle-orm";
 import { user } from "@backend/lib/db/schema";
+import { socketinator } from "@backend/lib/socket";
 export const queueMap = new Map<GameType, Map<User["id"], User>>();
+export const challengeMap = new Map<
+  GameType,
+  { sender: User; reciever: User }
+>();
 
 const MAX_ELO_DIFF = 50;
 export const matchPlayers = () => {
@@ -46,7 +51,15 @@ export const joinQueue = async ({
 }) => {
   const results = await db.select().from(user).where(eq(user.id, userId));
   if (!results || results.length == 0) {
-    // Signal the error next time
+    // If this happend i'll kill myself
+    socketinator.send({
+      group: "hub",
+      key: "error",
+      userId: userId,
+      payload: {
+        message: "User not found",
+      },
+    });
     return;
   }
   let queue = queueMap.get(gameType);
@@ -57,4 +70,9 @@ export const joinQueue = async ({
   queue.set(userId, results[0]);
 };
 
-export const leaveQueue = () => {};
+export const leaveQueue = ({ userId }: { userId: User["id"] }) => {
+  queueMap.forEach((q) => q.delete(userId));
+};
+
+socketinator.on("hub", "join-queue", joinQueue);
+socketinator.on("hub", "quit-queue", leaveQueue);

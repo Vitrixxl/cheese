@@ -50,7 +50,8 @@ export type HubServerCommands =
   | WSCommand<
       "new-challenges",
       { challenges: { user: User; gameType: GameType } }
-    >;
+    >
+  | WSCommand<"", { challenges: { user: User; gameType: GameType } }>;
 
 export type ServerEnvelopes = { userId: User["id"] } & (
   | {
@@ -59,7 +60,7 @@ export type ServerEnvelopes = { userId: User["id"] } & (
     }
   | {
       group: "hub";
-      command: HubServerCommands | ErrorCommand;
+      command: CommonHubCommand | ErrorCommand;
     }
 );
 
