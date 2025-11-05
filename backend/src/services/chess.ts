@@ -30,15 +30,15 @@ const timerIntervals = new Map<string, ReturnType<typeof setInterval>>();
 
 // All timer values are stored in milliseconds.
 export const INITIALS_TIMERS: Record<GameType, number> = {
-  "1 | 0": 60_000,
+  "1 min": 60_000,
   "1 | 1": 60_000,
   "2 | 1": 120_000,
-  "3 | 0": 180_000,
+  "3 min": 180_000,
   "3 | 2": 180_000,
-  "5 | 0": 300_000,
+  "5 min": 300_000,
   "10 | 5": 600_000,
   "15 | 10": 900_000,
-  "30 | 0": 1_800_000,
+  "30 min": 1_800_000,
   Daily: 86_400_000, // 1 day
   "Daily 960": 86_400_000, // same as Daily
   "Custom Long": 3_600_000, // example: 1 hour default for custom

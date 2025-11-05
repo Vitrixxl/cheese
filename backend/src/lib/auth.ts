@@ -5,9 +5,9 @@ import { betterAuth } from "better-auth";
 import * as schema from "./db/schema";
 import { db } from "./db";
 import { socketinator } from "./socket";
-import { session } from "backend/auth-schema";
 
 export const auth = betterAuth({
+  baseURL: "http://localhost:6969",
   trustedOrigins: ["http://localhost:5173"],
   database: drizzleAdapter(db, {
     provider: "sqlite",
@@ -21,13 +21,19 @@ export const auth = betterAuth({
         input: false,
         required: true,
       },
+      puzzleLevel: {
+        type: "number",
+        defaultValue: 0,
+        input: false,
+        required: true,
+      },
     },
   },
   socialProviders: {
     google: {
       clientId: Bun.env.AUTH_GOOGLE_ID as string,
       clientSecret: Bun.env.AUTH_GOOGLE_SECRET as string,
-      redirectURI: "http://localhost:5173",
+      // redirectURI: "http://localhost:5173",
     },
   },
   hooks: {

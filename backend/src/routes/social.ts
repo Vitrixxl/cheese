@@ -16,6 +16,7 @@ import {
   getGroup,
   getGroupRequests,
   getGroups,
+  sendChatMessage,
   rejectFriendRequest,
   rejectGroupRequest,
   searchUsers,
@@ -234,7 +235,6 @@ export const socialRoutes = new Elysia({ prefix: "social" })
     },
   )
 
-  // Groups endpoints
   .get(
     "/groups",
     async ({ user }) => {
@@ -427,11 +427,60 @@ export const socialRoutes = new Elysia({ prefix: "social" })
     {
       auth: true,
       params: z.object({
-        id: z.number(),
+        id: z.coerce.number(),
       }),
       query: z.object({
-        limit: z.number().default(50),
-        cursor: z.number().default(0),
+        limit: z.coerce.number().default(50),
+        cursor: z.coerce.number().default(0),
       }),
+    },
+  )
+
+  .post(
+    "/chats/:id/messages",
+    async ({ params: { id }, user, status, body }) => {
+      try {
+        const message = await sendChatMessage(user.id, id, body);
+        return status(201, message);
+      } catch (error) {
+        const message = (error as Error).message;
+        if (message === "Forbidden") {
+          return status(403, {
+            message: "not your chat",
+          });
+        }
+        if (message === "Chat not found") {
+          return status(404, {
+            message: "not a chat",
+          });
+        }
+        if (
+          message === "Message content or game reference required" ||
+          message === "Game not found"
+        ) {
+          return status(400, { message });
+        }
+        return status(500, {
+          message: "failed to send message",
+        });
+      }
+    },
+    {
+      auth: true,
+      params: z.object({
+        id: z.coerce.number(),
+      }),
+      body: z
+        .object({
+          content: z.string().optional(),
+          gameId: z.coerce.number().optional(),
+        })
+        .refine(
+          (data) =>
+            (data.content ?? "").trim().length > 0 || data.gameId !== undefined,
+          {
+            message: "Message content or game reference required",
+          },
+        ),
     },
   );

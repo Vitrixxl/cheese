@@ -8,6 +8,8 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@game-server": ["./game-server/src"],
+      "@game-server/*": ["./game-server/src/*"],
       "@backend": ["./backend/src"],
       "@backend/*": ["./backend/src/*"],
       "@shared": ["./shared/index.ts"],

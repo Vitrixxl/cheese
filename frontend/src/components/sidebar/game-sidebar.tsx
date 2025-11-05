@@ -1,23 +1,26 @@
-import type { ReactNode } from "react";
 import { SidebarGroup, SidebarMenu } from "../ui/sidebar";
 import { GAME_TYPES } from "@shared";
 import { Zap, Flame, Timer, Hourglass } from "lucide-react";
 import { GameButton } from "./game-button";
+import { useQueue } from "@/hooks/use-queue";
 
-const gameIconMap: Record<string, ReactNode> = {
-  bullet: <Zap className="size-12 group-hover/button:text-yellow-500" />,
-  blitz: <Flame className="size-12 group-hover/button:text-orange-500" />,
-  rapid: <Timer className="size-12 group-hover/button:text-green-500" />,
-  classic: <Hourglass className="size-12 group-hover/button:text-blue-500" />,
-};
+const gameIconMap = {
+  bullet: Zap,
+  blitz: Flame,
+  rapid: Timer,
+  classic: Hourglass,
+} as const;
 export default function GameSidebar() {
+  const { enterQueue } = useQueue();
   return (
     <SidebarGroup>
       <SidebarMenu className="grid grid-cols-2 grid-rows-2 gap-2">
         {Object.entries(GAME_TYPES).map(([k]) => (
           <GameButton
+            key={k}
             gameType={k as keyof typeof GAME_TYPES}
-            icon={gameIconMap[k]}
+            icon={gameIconMap[k as keyof typeof GAME_TYPES]}
+            onSelect={enterQueue}
           />
         ))}
       </SidebarMenu>

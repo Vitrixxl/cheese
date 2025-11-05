@@ -1,5 +1,6 @@
 import { treaty } from "@elysiajs/eden";
 import type { App, ApiError } from "@backend";
+import type { GameApi } from "@game-server";
 export const api = treaty<App>("localhost:6969", {
   fetch: { credentials: "include" },
 });
@@ -24,3 +25,7 @@ export const handleApiResponse = async <T>(
   }
   return data;
 };
+
+export const hubSocket = api.ws;
+
+export const chessApi = treaty<GameApi>("localhost:3001");

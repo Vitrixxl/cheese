@@ -11,6 +11,7 @@ export type {
   GroupUser,
   Message,
   FriendRequests,
+  Puzzle,
 } from "@backend/lib/db/schema";
 
 export interface GroupWithUsers extends Group {

@@ -337,7 +337,7 @@ export default function Window({
         isFullScreen={isFullScreen}
         canResize={!fitSize}
       />
-      <div className="p-4">{children}</div>
+      <div className="">{children}</div>
       {SQUARE_POSITIONS.map((p, i) => (
         <ResizeBar
           key={i}

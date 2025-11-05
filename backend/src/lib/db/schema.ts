@@ -6,6 +6,7 @@ import {
   index,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
+import { Outcome } from "@shared";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -16,6 +17,7 @@ export const user = sqliteTable("user", {
     .notNull(),
   image: text("image"),
   elo: integer().notNull().default(500),
+  puzzleLevel: integer().notNull().default(1),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
     .notNull(),
@@ -83,15 +85,20 @@ export const verification = sqliteTable("verification", {
 });
 
 export const game = sqliteTable("game", {
-  id: integer().primaryKey({ autoIncrement: true }),
+  id: text().primaryKey(),
   whiteId: text()
     .references(() => user.id)
     .notNull(),
   blackId: text()
     .references(() => user.id)
     .notNull(),
-  outcome: text().$type<"checkmate" | "draw" | "giveup">().notNull(),
-  winner: text().references(() => user.id),
+  outcome: text().$type<Outcome>().notNull(),
+  winner: text().$type<Color>(),
+  messages: text({ mode: "json" })
+    .default([])
+    .$type<{ userId: string; content: string }[]>(),
+  whiteTimer: integer().notNull(),
+  blackTimer: integer().notNull(),
   createdAt: integer({ mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
 export type Game = typeof game.$inferSelect;
@@ -182,6 +189,9 @@ export type Chat = typeof chat.$inferSelect;
 
 export const message = sqliteTable("message", {
   id: integer().primaryKey({ autoIncrement: true }),
+  userId: text()
+    .references(() => user.id)
+    .notNull(),
   chatId: integer()
     .references(() => chat.id)
     .notNull(),
@@ -190,3 +200,12 @@ export const message = sqliteTable("message", {
 });
 
 export type Message = typeof message.$inferSelect;
+
+export const puzzle = sqliteTable("puzzle", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  fen: text().notNull(),
+  moves: text().notNull(),
+  themes: text().notNull(),
+});
+
+export type Puzzle = typeof puzzle.$inferSelect;

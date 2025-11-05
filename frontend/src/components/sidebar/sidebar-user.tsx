@@ -16,11 +16,15 @@ export const SidebarUser = () => {
       ) : (
         <SidebarMenuButton
           variant={"outline"}
-          onClick={() => auth.signIn.social({ provider: "google" })}
+          onClick={() =>
+            auth.signIn.social({
+              provider: "google",
+              callbackURL: "http://localhost:5173",
+            })
+          }
           className="justify-center"
         >
-          Connect with github
-          <LucideGithub />
+          Connect with google
         </SidebarMenuButton>
       )}
     </SidebarMenu>

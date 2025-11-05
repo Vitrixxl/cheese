@@ -26,7 +26,7 @@ export function AddFriends() {
   const [query, setQuery] = React.useState("");
   const { data, error, isLoading } = useSearchFriend(query);
   return (
-    <div className="flex flex-col gap-2 h-full">
+    <div className="flex flex-col gap-2 h-full p-4">
       <InputGroup>
         <InputGroupInput
           placeholder="Search the name of your friend"

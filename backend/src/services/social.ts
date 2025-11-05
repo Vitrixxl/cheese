@@ -1,37 +1,25 @@
 import { db } from "../lib/db";
-import {
-  and,
-  desc,
-  eq,
-  getTableColumns,
-  inArray,
-  like,
-  lt,
-  or,
-} from "drizzle-orm";
+import { and, desc, eq, getTableColumns, inArray, like, or } from "drizzle-orm";
 import {
   chat,
   friend,
   friendRequests,
   game,
-  Group,
   group,
   groupRequest,
   groupUser,
-  Message,
   message,
   user,
 } from "../lib/db/schema";
+import { GroupWithUsers, Group, Message, User } from "@shared";
 
-type DbUser = typeof user.$inferSelect;
-
-export type FriendWithChat = DbUser & { chatId: number | null };
+export type FriendWithChat = User & { chatId: number | null };
 
 // User Search
 export const searchUsers = async (
   query: string,
   limit: number = 10,
-): Promise<DbUser[]> => {
+): Promise<User[]> => {
   const trimmedQuery = query.trim();
   if (trimmedQuery.length === 0) return [];
 
@@ -49,6 +37,10 @@ export const searchUsers = async (
     .limit(normalizedLimit);
 
   return users;
+};
+
+export const getUsersById = async (ids: User["id"][]) => {
+  return db.select().from(user).where(inArray(user.id, ids));
 };
 
 export const getFriends = async (userId: string): Promise<FriendWithChat[]> => {
@@ -208,7 +200,7 @@ export const getGroup = async (groupId: number) => {
   return { ...g, users };
 };
 
-export const getGroups = async (userId: string): Promise<Group[]> => {
+export const getGroups = async (userId: string): Promise<GroupWithUsers[]> => {
   const groupIds = await db
     .select({ groupId: groupUser.groupId })
     .from(groupUser)
@@ -351,17 +343,15 @@ export const getChatMessagesPaginated = async (
   const canRead = await canReadChat(userId, chatId);
   if (!canRead) throw new Error("Forbidden");
 
+  console.log(chatId);
   const rows = await db
     .select({ ...getTableColumns(message), game: game.id })
     .from(message)
     .leftJoin(game, eq(game.id, message.gameId))
-    .where(
-      cursor !== undefined
-        ? and(eq(message.chatId, chatId), lt(message.id, cursor))
-        : eq(message.chatId, chatId),
-    )
+    .where(eq(message.chatId, chatId))
     .orderBy(desc(message.id))
     .limit(limit + 1);
+  console.log(rows);
 
   const hasNext = rows.length > limit;
   const limitedRows = hasNext ? rows.slice(0, limit) : rows;
@@ -372,6 +362,56 @@ export const getChatMessagesPaginated = async (
     messages: limitedRows,
     nextCursor,
   };
+};
+
+export const sendChatMessage = async (
+  userId: string,
+  chatId: number,
+  {
+    content,
+    gameId,
+  }: {
+    content?: string;
+    gameId?: string;
+  },
+): Promise<Message> => {
+  const [chatRow] = await db
+    .select({ id: chat.id })
+    .from(chat)
+    .where(eq(chat.id, chatId))
+    .limit(1);
+
+  if (!chatRow) throw new Error("Chat not found");
+
+  const canRead = await canReadChat(userId, chatId);
+  if (!canRead) throw new Error("Forbidden");
+
+  const normalizedContent = content?.trim() ?? "";
+  if (!normalizedContent && gameId === undefined) {
+    throw new Error("Message content or game reference required");
+  }
+
+  if (gameId !== undefined) {
+    const [gameRow] = await db
+      .select({ id: game.id })
+      .from(game)
+      .where(eq(game.id, gameId))
+      .limit(1);
+
+    if (!gameRow) throw new Error("Game not found");
+  }
+
+  const [newMessage] = await db
+    .insert(message)
+    .values({
+      chatId: chatId,
+      userId,
+      content: normalizedContent ? normalizedContent : null,
+      gameId: gameId ?? null,
+    })
+    .returning(getTableColumns(message));
+
+  return newMessage;
 };
 
 // Friend Requests
@@ -437,8 +477,8 @@ export const sendFriendRequest = async (
 export const getFriendRequests = async (
   userId: string,
 ): Promise<{
-  incoming: Array<{ id: number; from: DbUser; createdAt: Date }>;
-  outgoing: Array<{ id: number; to: DbUser; createdAt: Date }>;
+  incoming: Array<{ id: number; from: User; createdAt: Date }>;
+  outgoing: Array<{ id: number; to: User; createdAt: Date }>;
 }> => {
   const incoming = await db
     .select({
@@ -595,8 +635,8 @@ export const sendGroupRequest = async (
 export const getGroupRequests = async (
   userId: string,
 ): Promise<{
-  incoming: Array<{ id: number; from: DbUser; group: Group; createdAt: Date }>;
-  outgoing: Array<{ id: number; to: DbUser; group: Group; createdAt: Date }>;
+  incoming: Array<{ id: number; from: User; group: Group; createdAt: Date }>;
+  outgoing: Array<{ id: number; to: User; group: Group; createdAt: Date }>;
 }> => {
   const incomingRows = await db
     .select({

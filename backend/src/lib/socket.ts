@@ -1,21 +1,45 @@
-import { CommonChessCommands, Outcome, ServerEnvelopes } from "@shared";
-import { WSCommand } from "@socketinator/sdk/server";
+import { CommonChessCommands, Outcome, GAME_TYPES } from "@shared";
 import {
   Socketinator,
-  SocketinatorReadEntriesConfig,
+  type CommandPacket,
+  type InboundCommandConfig,
+  type TargetedCommandRequestEnvelope,
 } from "@socketinator/sdk/server";
+import { Color } from "chess.js";
 import z from "zod";
 import { User } from "./auth";
-import { Color } from "chess.js";
-import { GAME_TYPES } from "@shared";
+
+type UserId = User["id"];
+
+type ChessOutboundCommand<
+  Key extends string,
+  Payload,
+> = TargetedCommandRequestEnvelope & {
+  group: "chess";
+  userId: UserId;
+  command: CommandPacket<Key, Payload>;
+};
 
 export type ChessServerCommands =
-  | CommonChessCommands
-  | WSCommand<"end", { winner: User["id"] | null; outcome: Outcome }>
-  | WSCommand<"disconnection", null>
-  | WSCommand<"reconnection", null>
-  | WSCommand<"move", { move: string; timers: Record<Color, number> }>
-  | WSCommand<"start", { opponent: User; color: Color; gameId: string }>;
+  | (CommonChessCommands & TargetedCommandRequestEnvelope & { userId: UserId })
+  | ChessOutboundCommand<"end", { winner: UserId | null; outcome: Outcome }>
+  | ChessOutboundCommand<"disconnection", null>
+  | ChessOutboundCommand<"reconnection", null>
+  | ChessOutboundCommand<
+      "move",
+      {
+        move: string;
+        timers: Record<Color, number>;
+      }
+    >
+  | ChessOutboundCommand<
+      "start",
+      {
+        opponent: User;
+        color: Color;
+        gameId: string;
+      }
+    >;
 
 const readEnvelopes = {
   hub: {
@@ -33,7 +57,7 @@ const readEnvelopes = {
     },
     challenge: {
       schema: z.object({
-        challengeId: z.string(),
+        ranked: z.boolean(),
         gameType: z.literal(
           Object.entries(GAME_TYPES)
             .map(([_, k]) => k)
@@ -77,15 +101,15 @@ const readEnvelopes = {
       }),
     },
   },
-} satisfies SocketinatorReadEntriesConfig;
+} satisfies InboundCommandConfig;
 
 export type ServerReadEnvelopes = typeof readEnvelopes;
 
 export const socketinator = new Socketinator<
-  ServerEnvelopes,
+  ChessServerCommands,
   ServerReadEnvelopes
 >({
-  url: "",
+  url: "ws://localhost:6969",
   readEnvelopes,
   onClose: () => {
     console.log("CLOSSEEED");
