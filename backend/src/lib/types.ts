@@ -1,4 +1,5 @@
 import { ValidationError } from "elysia";
+import type { WithOptionalWS, WithColor } from "@game-server/types";
 import z from "zod";
 import { wsMessageSchema } from "./schema";
 import type { Challenge, GameType, User } from "@shared";
@@ -26,7 +27,7 @@ export type WsServerMessage = {
   game: {
     newGameId: string;
     gameType: GameType;
-    users: User[];
+    users: WithColor<WithOptionalWS<User>>[];
     initialTimer: number;
   };
   declinedChallenge: {

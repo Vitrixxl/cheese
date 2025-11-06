@@ -1,4 +1,4 @@
 import type { DriverType } from "@/types";
 import { atom } from "jotai";
 
-export const currentDriver = atom<DriverType>("local");
+export const currentDriverAtom = atom<DriverType>("local");

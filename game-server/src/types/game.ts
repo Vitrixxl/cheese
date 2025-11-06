@@ -9,7 +9,7 @@ export type WithOptionalWS<T> = {
   ws: ElysiaWS | null;
 } & T;
 
-export type Game = {
+export type ServerGame = {
   id: string;
   users: Record<User["id"], WithOptionalWS<WithColor<User>>>;
   opponentByUserId: Record<User["id"], WithOptionalWS<WithColor<User>>>;

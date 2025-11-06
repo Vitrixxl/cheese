@@ -1,6 +1,7 @@
 import {
   boardVersionAtom,
   chessAtom,
+  chessHistoryAtom,
   hintMovesAtom,
   hoverSquareAtom,
   selectedSquareAtom,
@@ -25,6 +26,7 @@ export function useBoardController(): BoardController {
   const setVersion = useSetAtom(boardVersionAtom);
   const setMoves = useSetAtom(hintMovesAtom);
   const setHover = useSetAtom(hoverSquareAtom);
+  const setHistory = useSetAtom(chessHistoryAtom);
 
   const selectSquare = (square: Square | null) => {
     setSelected(square);
@@ -40,6 +42,7 @@ export function useBoardController(): BoardController {
 
   const applyLocalMove = (move: LocalMove) => {
     chess.move(move);
+    setHistory(chess.history());
     bumpBoard();
     setSelected(null);
     setMoves([]);

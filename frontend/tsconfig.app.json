@@ -17,6 +17,18 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path mappings for frontend */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared": ["../shared/index.ts"],
+      "@shared/*": ["../shared/*"],
+      "@backend": ["../backend/src"],
+      "@backend/*": ["../backend/src/*"],
+      "@game-server": ["../game-server/src"],
+      "@game-server/*": ["../game-server/src/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

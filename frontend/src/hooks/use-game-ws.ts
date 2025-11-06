@@ -1,10 +1,60 @@
+import { gameIdAtom } from "@/store";
+import React from "react";
+import { useAtom } from "jotai";
+import { gameWsAtom } from "@/store/ws";
+import { tryCatch } from "@shared";
+import { gameApi } from "@/lib/api";
 import { auth } from "@/lib/auth";
-import { getGameWs } from "@/lib/socket";
+import type { WsChessServerMessageWithKey } from "@game-server/types/schema";
+import { useBoardController } from "./use-board-controller";
 
-export default function useGameWs(gameId: string | null) {
-  const { data, error } = auth.useSession();
-  if (error || !gameId || !data) return;
-  const userId = data.user.id;
+export default function useGameWs() {
+  const [ws, setWs] = useAtom(gameWsAtom);
+  const [gameId] = useAtom(gameIdAtom);
+  const { data: authData } = auth.useSession();
+  const { applyLocalMove } = useBoardController();
+  const handleClose = () => {
+    setWs(null);
+  };
+  const handleMessage = (ev: MessageEvent<any>) => {
+    const { key, payload } = ev.data as WsChessServerMessageWithKey;
+    switch (key) {
+      case "gameStatus": {
+        break;
+      }
+      case "move": {
+        applyLocalMove({ ...payload.move });
+        break;
+      }
+      case "message":
+      case "drawOffer":
+      case "start":
+      case "end": {
+        break;
+      }
+      case "disconnection":
+      case "connection":
+    }
+  };
+  React.useEffect(() => {
+    if (!gameId || !authData) return;
 
-  const ws = getGameWs({ gameId, userId });
+    if (!ws) {
+      const { data, error } = tryCatch(() =>
+        gameApi.ws.subscribe({ query: { userId: authData.user.id, gameId } }),
+      );
+      if (error) {
+        return;
+      }
+      setWs(data);
+      return;
+    }
+    ws.on("close", handleClose);
+    ws.on("message", handleMessage);
+    return () => {
+      ws.off("close", handleClose);
+      ws.off("message", handleMessage);
+      ws.close();
+    };
+  }, [ws, gameId]);
 }

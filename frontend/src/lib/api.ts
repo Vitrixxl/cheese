@@ -28,4 +28,4 @@ export const handleApiResponse = async <T>(
 
 export const hubSocket = api.ws;
 
-export const chessApi = treaty<GameApi>("localhost:3001");
+export const gameApi = treaty<GameApi>("localhost:3001");

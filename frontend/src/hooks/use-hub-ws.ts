@@ -1,25 +1,39 @@
-import { api } from "@/lib/api";
 import { chessChallengesAtom } from "@/store/chess-challenges";
-import { currentDriver, gameIdAtom, isInQueueAtom, store } from "@/store";
+import {
+  colorAtom,
+  currentDriverAtom,
+  gameIdAtom,
+  isInQueueAtom,
+  store,
+} from "@/store";
 import type { WsServerMessageWithKey } from "@backend";
 import React from "react";
-import useGameWs from "./use-game-ws";
+import { useAtom } from "jotai";
+import { hubWsAtom } from "@/store/ws";
+import { tryCatch } from "@shared";
+import { api } from "@/lib/api";
+import { auth } from "@/lib/auth";
 
 export default function useHubWs() {
-  const [gameId, setGameId] = React.useState<string | null>(null);
-  useGameWs(gameId);
+  const [ws, setWs] = useAtom(hubWsAtom);
+  const { data: authData } = auth.useSession();
+  const handleClose = () => {
+    setWs(null);
+  };
+  const handleMessage = React.useEffectEvent((ws: MessageEvent<any>) => {
+    if (!authData) return;
+    const { user } = authData;
+    const { key, payload } = ws.data as WsServerMessageWithKey;
 
-  const ws = api.ws.subscribe();
-
-  ws.on("close", () => console.log("closed"));
-  ws.on("message", (a) => {
-    const { key, payload } = a.data as WsServerMessageWithKey;
     switch (key) {
       case "game": {
         store.set(gameIdAtom, payload.newGameId);
-        store.set(currentDriver, "online");
+        store.set(currentDriverAtom, "online");
         store.set(isInQueueAtom, false);
-        setGameId(payload.newGameId);
+        store.set(
+          colorAtom,
+          payload.users.find((u) => u.id == user.id)?.color || null,
+        );
         break;
       }
 
@@ -35,4 +49,22 @@ export default function useHubWs() {
       }
     }
   });
+  React.useEffect(() => {
+    if (!ws) {
+      const { data, error } = tryCatch(api.ws.subscribe);
+      if (error) {
+        return;
+      }
+      setWs(data);
+      return;
+    }
+    ws.on("close", handleClose);
+    ws.on("message", handleMessage);
+    return () => {
+      ws.off("close", handleClose);
+      ws.off("message", handleMessage);
+      ws.close();
+    };
+  }, [ws]);
+  return { hubWs: ws };
 }

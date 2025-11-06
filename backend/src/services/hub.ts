@@ -41,15 +41,10 @@ export class MatchmakingService {
           }
         }
 
-        if (bestMatch) {
-          console.log("BEST MATCH");
-          this.createGame({ gameType, users: [player, bestMatch.user] });
-          queue.delete(player.id);
-          queue.delete(bestMatch.user.id);
-          return;
-        }
-
-        console.log("nomatch");
+        if (!bestMatch) return;
+        this.createGame({ gameType, users: [player, bestMatch.user] });
+        queue.delete(player.id);
+        queue.delete(bestMatch.user.id);
       });
     });
   }

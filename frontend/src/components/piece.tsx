@@ -47,9 +47,7 @@ export default function Piece({
       src={src}
       draggable={false}
       className={cn(
-        isDragging
-          ? "fixed -translate-1/2 size-11/12 z-20"
-          : "size-11/12 relative",
+        isDragging ? "fixed -translate-1/2 z-20" : "h-10/12 relative",
       )}
       onClick={() => onSelect(square)}
       style={{

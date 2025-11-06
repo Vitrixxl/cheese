@@ -1,3 +1,4 @@
+import GameDrivenBoard from "@/components/drived-board/game-driven-board";
 import LocalDrivenBoard from "@/components/drived-board/local-driven-board";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,11 +9,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useQueue } from "@/hooks/use-queue";
+import { currentDriverAtom } from "@/store";
+import { useAtomValue } from "jotai";
 
 export default function AppPage() {
+  const driver = useAtomValue(currentDriverAtom);
+
   return (
     <>
-      <LocalDrivenBoard />
+      {driver == "local" ? (
+        <LocalDrivenBoard />
+      ) : driver == "online" ? (
+        <GameDrivenBoard />
+      ) : null}
       <LoadingGameDialog />
     </>
   );

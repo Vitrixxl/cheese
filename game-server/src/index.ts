@@ -1,10 +1,11 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import z from "zod";
-import { GAME_TYPES, GameType, INITIALS_TIMERS } from "@shared";
+import { GAME_TYPES, GameType, INITIALS_TIMERS, User } from "@shared";
 import { Chess, Color } from "chess.js";
 import { GameInstance } from "./engine";
 import { messageSchema } from "./schema";
+import { WithColor, WithOptionalWS } from "./types";
 
 export const gameMap = new Map<string, GameInstance>();
 
@@ -29,7 +30,14 @@ const app = new Elysia()
       const color = getColor();
       const newGameId = Bun.randomUUIDv7();
       const initialTimer = getInitialTimer(gameType);
-
+      const completUsers: Record<string, WithOptionalWS<WithColor<User>>> = {
+        [user1.id]: { ...user1, color, ws: null },
+        [user2.id]: {
+          ...user2,
+          color: color == "w" ? "b" : "w",
+          ws: null,
+        },
+      };
       gameMap.set(
         newGameId,
         new GameInstance({
@@ -37,7 +45,11 @@ const app = new Elysia()
           gameType,
           users: {
             [user1.id]: { ...user1, color, ws: null },
-            [user2.id]: { ...user2, color: color == "w" ? "b" : "w", ws: null },
+            [user2.id]: {
+              ...user2,
+              color: color == "w" ? "b" : ("w" as Color),
+              ws: null,
+            },
           },
           opponentByUserId: {
             [user2.id]: { ...user1, color, ws: null },
@@ -58,7 +70,7 @@ const app = new Elysia()
       );
       return {
         newGameId,
-        users,
+        users: Object.values(completUsers),
         initialTimer,
       };
     },

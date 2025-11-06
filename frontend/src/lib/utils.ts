@@ -7,39 +7,42 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const buildPieceImgSrc = (
-  set: string,
-  size: number,
-  color: "w" | "b",
-  type: PieceSymbol,
-) =>
-  `https://images.chesscomfiles.com/chess-themes/pieces/${set}/${size}/${color}${type}.png`;
+const pieceNames: Record<PieceSymbol, string> = {
+  p: "pawn",
+  n: "knight",
+  b: "bishop",
+  r: "rook",
+  q: "queen",
+  k: "king",
+};
 
-const PIECE_SET = "neo";
+const buildPieceImgSrc = (color: "w" | "b", type: PieceSymbol) =>
+  `/${color}${type.toUpperCase()}.svg`;
+
 export const pieceImgMap: Record<PieceSymbol, { w: string; b: string }> = {
   p: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "p"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "p"),
+    w: buildPieceImgSrc("w", "p"),
+    b: buildPieceImgSrc("b", "p"),
   },
   n: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "n"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "n"),
+    w: buildPieceImgSrc("w", "n"),
+    b: buildPieceImgSrc("b", "n"),
   },
   b: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "b"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "b"),
+    w: buildPieceImgSrc("w", "b"),
+    b: buildPieceImgSrc("b", "b"),
   },
   r: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "r"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "r"),
+    w: buildPieceImgSrc("w", "r"),
+    b: buildPieceImgSrc("b", "r"),
   },
   q: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "q"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "q"),
+    w: buildPieceImgSrc("w", "q"),
+    b: buildPieceImgSrc("b", "q"),
   },
   k: {
-    w: buildPieceImgSrc(PIECE_SET, 150, "w", "k"),
-    b: buildPieceImgSrc(PIECE_SET, 150, "b", "k"),
+    w: buildPieceImgSrc("w", "k"),
+    b: buildPieceImgSrc("b", "k"),
   },
 };
 

@@ -8,7 +8,7 @@ import type { DriverType, LocalMove } from "@/types/chess";
 export type BoardDriver = {
   id: DriverType;
   start?: (ctx: BoardController) => (() => void) | void;
-  onLocalMove?(move: LocalMove, ctx: BoardController): boolean;
+  onLocalMove?(move: LocalMove, ctx: BoardController): void;
 };
 
 export function useBoardDriver(driver: BoardDriver) {
@@ -21,8 +21,7 @@ export function useBoardDriver(driver: BoardDriver) {
 
   const playMove = (move: LocalMove) => {
     if (driver.onLocalMove) {
-      const handled = driver.onLocalMove(move, controller);
-      if (handled === false) return false;
+      driver.onLocalMove(move, controller);
     }
     return controller.applyLocalMove(move);
   };

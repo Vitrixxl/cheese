@@ -7,6 +7,7 @@ import {
   selectedSquareAtom,
 } from "@/store/chess-board";
 import { useAtomValue } from "jotai";
+import { BoardHistory } from "../board-history";
 
 export default function LocalDrivenBoard() {
   const { controller, playMove } = useBoardDriver({ id: "local" });
@@ -15,14 +16,18 @@ export default function LocalDrivenBoard() {
   const hover = useAtomValue(hoverSquareAtom);
   const selected = useAtomValue(selectedSquareAtom);
   return (
-    <Board
-      board={board}
-      moves={moves}
-      hover={hover}
-      selected={selected}
-      onMove={playMove}
-      onSelect={controller.selectSquare}
-      onHover={controller.setHover}
-    />
+    <div className="grid grid-rows-1 h-full gap-4">
+      <Board
+        board={board}
+        moves={moves}
+        hover={hover}
+        selected={selected}
+        color="w"
+        onMove={playMove}
+        onSelect={controller.selectSquare}
+        onHover={controller.setHover}
+      />
+      <BoardHistory />
+    </div>
   );
 }

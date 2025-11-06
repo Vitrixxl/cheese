@@ -52,7 +52,10 @@ export function AddFriends() {
       {data && (
         <div className="flex flex-col gap-2">
           {data.map((u) => (
-            <div className="flex gap-2 items-center group/button w-full ">
+            <div
+              className="flex gap-2 items-center group/button w-full "
+              key={u.id}
+            >
               <Button
                 className="justify-start px-4 flex-1"
                 variant={"ghost"}
@@ -114,7 +117,7 @@ export default function FriendSidebar() {
           </div>
         )}
         {data && data.length > 0 ? (
-          data.map((u) => <div>{u.name}</div>)
+          data.map((u, i) => <div key={i}>{u.name}</div>)
         ) : (
           <p className="text-xs text-muted-foreground mx-auto">
             You don't have friend ahahah

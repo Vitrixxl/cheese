@@ -25,3 +25,9 @@ export type ChessServerMessages = {
   disconnection: null;
   connection: null;
 };
+export type WsChessServerMessageWithKey = {
+  [K in keyof ChessServerMessages]: {
+    key: K;
+    payload: ChessServerMessages[K];
+  };
+}[keyof ChessServerMessages];

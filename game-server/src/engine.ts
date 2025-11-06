@@ -1,15 +1,15 @@
 import { tryCatch, type Outcome, type User } from "@shared";
-import { Game } from "./types/game";
+import { ServerGame } from "./types/game";
 import { ElysiaWS } from "elysia/ws";
 import { ChessClientMessage, ChessServerMessages } from "./types/schema";
 import { Color } from "chess.js";
 import { api } from "./lib/api";
 
 export class GameInstance {
-  game: Game;
+  game: ServerGame;
   timerInterval: ReturnType<typeof setInterval> | null = null;
   timers: Record<Color, number> | null = null;
-  constructor(game: Game) {
+  constructor(game: ServerGame) {
     this.game = game;
     this;
   }
