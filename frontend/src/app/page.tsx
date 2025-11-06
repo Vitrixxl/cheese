@@ -14,6 +14,7 @@ import { useAtomValue } from "jotai";
 
 export default function AppPage() {
   const driver = useAtomValue(currentDriverAtom);
+  console.log({ driver });
 
   return (
     <>

@@ -1,17 +1,8 @@
 import { GAME_TYPES, type GameType } from "@shared";
 import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
 import React, { type ForwardRefExoticComponent } from "react";
-import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { cn } from "@/lib/utils";
 import type { LucideProps } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type GameButtonProps = {
   gameType: keyof typeof GAME_TYPES;
@@ -25,71 +16,42 @@ export const GameButton = ({
   onSelect,
   ...props
 }: GameButtonProps) => {
-  const [selected, setSelected] = React.useState<string | undefined>(undefined);
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [selected, setSelected] = React.useState<GameType | null>(null);
   const gameTypes = GAME_TYPES[gameType];
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          className={cn(
-            "aspect-square !size-auto flex flex-col group/button",
-            !isOpen && "not-hover:[&>.icon]:!text-foreground",
-          )}
-          variant={"outline"}
-        >
-          <props.icon
-            style={{ color: `var(--${gameType}-color)` }}
-            className="icon size-12"
-          />
-          <span className="text-lg">{gameType}</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex gap-2 items-center group/button">
-            <props.icon
-              className="size-10"
-              style={{ color: `var(--${gameType}-color)` }}
-            />
-            <span className="text-2xl">
-              {gameType[0].toUpperCase()}
-              {gameType.slice(1, gameType.length)}
-            </span>
-          </DialogTitle>
-          <DialogDescription>
-            Choose the type of game and press lezgoo to start a game
-          </DialogDescription>
-        </DialogHeader>
-        <div className="flex flex-col gap-2">
-          <ToggleGroup
-            type="single"
-            onValueChange={setSelected}
-            value={selected}
-            className="w-full"
+    <div className="flex flex-col w-full gap-2">
+      <div className="flex gap-2 items-center">
+        <props.icon
+          className="size-10"
+          style={{
+            color: `var(--${gameType}-color)`,
+          }}
+        />
+        <h2 className="text-xl font-semibold">{gameType}</h2>
+      </div>
+      <div className="flex gap-2 w-full">
+        {gameTypes.map((g) => (
+          <Button
+            size="sm"
+            className={cn(
+              "flex-1 ",
+              selected == g && "text-foreground !bg-input/50",
+            )}
+            variant="outline"
+            onClick={() => (selected == g ? setSelected(null) : setSelected(g))}
+            // style={{
+            //   borderColor: `var(--${gameType}-color)`,
+            // }}
           >
-            {gameTypes.map((g) => (
-              <ToggleGroupItem
-                value={g}
-                variant={"outline"}
-                className="flex-1 "
-              >
-                {g}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
-          {selected && (
-            <Button
-              onClick={() => {
-                setIsOpen(false);
-                onSelect(selected as GameType);
-              }}
-            >
-              Let's goooo
-            </Button>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+            {g}
+          </Button>
+        ))}
+      </div>
+      {selected && (
+        <Button className="" onClick={() => onSelect(selected)}>
+          Start
+        </Button>
+      )}
+    </div>
   );
 };

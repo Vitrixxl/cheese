@@ -12,8 +12,9 @@ export default function useGameWs() {
   const [ws, setWs] = useAtom(gameWsAtom);
   const [gameId] = useAtom(gameIdAtom);
   const { data: authData } = auth.useSession();
-  const { applyLocalMove } = useBoardController();
+  const { applyLocalMove, reset } = useBoardController();
   const handleClose = () => {
+    console.log("closing");
     setWs(null);
   };
   const handleMessage = (ev: MessageEvent<any>) => {
@@ -28,7 +29,10 @@ export default function useGameWs() {
       }
       case "message":
       case "drawOffer":
-      case "start":
+      case "start": {
+        reset();
+        break;
+      }
       case "end": {
         break;
       }
@@ -36,8 +40,23 @@ export default function useGameWs() {
       case "connection":
     }
   };
+
   React.useEffect(() => {
-    if (!gameId || !authData) return;
+    if (!ws) return;
+    reset();
+    ws.on("close", handleClose);
+    ws.on("message", handleMessage);
+    return () => {
+      ws.off("close", handleClose);
+      ws.off("message", handleMessage);
+      ws.close();
+    };
+  }, [ws]);
+
+  React.useEffect(() => {
+    if (!gameId || !authData) {
+      return;
+    }
 
     if (!ws) {
       const { data, error } = tryCatch(() =>
@@ -49,12 +68,5 @@ export default function useGameWs() {
       setWs(data);
       return;
     }
-    ws.on("close", handleClose);
-    ws.on("message", handleMessage);
-    return () => {
-      ws.off("close", handleClose);
-      ws.off("message", handleMessage);
-      ws.close();
-    };
-  }, [ws, gameId]);
+  }, [gameId, authData]);
 }

@@ -1,5 +1,5 @@
 import type { Position } from "@/components/window";
-import type { Square } from "chess.js";
+import type { Color, Square } from "chess.js";
 import React from "react";
 import type { LocalMove } from "@/types/chess";
 
@@ -7,7 +7,8 @@ type UseBoardDragParams = {
   pieceRef: React.RefObject<HTMLDivElement | null>;
   boardRef: React.RefObject<HTMLDivElement | null>;
   square: Square;
-  reversed: boolean;
+  color: Color;
+  playerColor: Color;
   onMove: (move: LocalMove) => void;
   onHover: (square: Square | null) => void;
 };
@@ -16,9 +17,10 @@ const fileLetters = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const rankNumbers = [8, 7, 6, 5, 4, 3, 2, 1];
 export const useBoardDrag = ({
   pieceRef,
-  reversed,
+  color,
   square,
   boardRef,
+  playerColor,
   onMove,
   onHover,
 }: UseBoardDragParams) => {
@@ -48,7 +50,7 @@ export const useBoardDrag = ({
     onHover(null);
     setCoordinates(null);
     setIsDragging(false);
-    if (hoverRef.current) {
+    if (hoverRef.current && color == playerColor) {
       onMove({
         from: square,
         to: hoverRef.current,
@@ -72,9 +74,6 @@ export const useBoardDrag = ({
       !boardRef.current ||
       !isInBound(boardRef.current, { x: e.x, y: e.y })
     ) {
-      // setIsDragging(false);
-      // setCoordinates(null);
-      // resetSize();
       return;
     }
 
@@ -88,12 +87,14 @@ export const useBoardDrag = ({
     const file = Math.floor(relX / squareWidth);
     const rank = Math.floor(relY / squareHeight);
 
-    const fileIndex = reversed ? 7 - file : file;
-    const rankIndex = reversed ? 7 - rank : rank;
+    const fileIndex = playerColor == "b" ? 7 - file : file;
+    const rankIndex = playerColor == "b" ? 7 - rank : rank;
     hoverRef.current =
       `${fileLetters[fileIndex]}${rankNumbers[rankIndex]}` as Square;
-    onHover(hoverRef.current);
 
+    if (playerColor == color) {
+      onHover(hoverRef.current);
+    }
     setCoordinates({
       x: e.x,
       y: e.y,

@@ -16,7 +16,7 @@ export default function LocalDrivenBoard() {
   const hover = useAtomValue(hoverSquareAtom);
   const selected = useAtomValue(selectedSquareAtom);
   return (
-    <div className="grid grid-rows-1 h-full gap-4">
+    <div className="grid grid-rows-1 h-full gap-4 grid-flow-col-dense">
       <Board
         board={board}
         moves={moves}

@@ -14,7 +14,7 @@ export default function GameSidebar() {
   const { enterQueue } = useQueue();
   return (
     <SidebarGroup>
-      <SidebarMenu className="grid grid-cols-2 grid-rows-2 gap-2">
+      <SidebarMenu className="flex flex-col gap-2">
         {Object.entries(GAME_TYPES).map(([k]) => (
           <GameButton
             key={k}

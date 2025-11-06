@@ -1,15 +1,16 @@
 import { useBoardDrag } from "@/hooks/use-board-drag";
 import { createPortal } from "react-dom";
 import { cn, pieceImgMap } from "@/lib/utils";
-import { type PieceSymbol, type Square } from "chess.js";
+import { type PieceSymbol, type Square, type Color } from "chess.js";
 import React from "react";
 import type { LocalMove } from "@/types/chess";
 
 type PieceProps = {
   type: PieceSymbol;
-  color: "w" | "b";
+  color: Color;
   size?: 50 | 75 | 100 | 150 | 200;
   square: Square;
+  playerColor: Color;
   onSelect: (square: Square | null) => void;
   onHover: (square: Square | null) => void;
   onMove: (move: LocalMove) => void;
@@ -22,6 +23,7 @@ export default function Piece({
   size = 150,
   square,
   boardRef,
+  playerColor,
   onSelect,
   onHover,
   onMove,
@@ -32,14 +34,15 @@ export default function Piece({
   const { isDragging, coordinates, dragSize } = useBoardDrag({
     pieceRef: ref,
     boardRef,
-    reversed: false,
+    color,
+    playerColor,
     square,
     onMove,
     onHover,
   });
 
   React.useEffect(() => {
-    if (isDragging) onSelect(square);
+    if (isDragging && playerColor == color) onSelect(square);
   }, [isDragging]);
 
   const img = (
@@ -49,7 +52,6 @@ export default function Piece({
       className={cn(
         isDragging ? "fixed -translate-1/2 z-20" : "h-10/12 relative",
       )}
-      onClick={() => onSelect(square)}
       style={{
         left: coordinates ? coordinates.x + "px" : "",
         top: coordinates ? coordinates.y + "px" : "",

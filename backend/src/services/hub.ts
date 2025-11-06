@@ -26,7 +26,6 @@ export class MatchmakingService {
   constructor() {}
 
   private matchPlayers() {
-    console.log("matching");
     this.queueMap.forEach((queue, gameType) => {
       const players = Array.from(queue.values());
       players.forEach((player) => {
@@ -97,10 +96,10 @@ export class MatchmakingService {
       console.error(error);
       return;
     }
-    console.log({ data });
     for (const user of users) {
+      console.log(user);
       this.send("game", user.id, {
-        users,
+        users: data.users,
         gameType,
         initialTimer: data.initialTimer,
         newGameId: data.newGameId,

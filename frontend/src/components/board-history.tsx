@@ -16,7 +16,7 @@ export const BoardHistory = () => {
   const history = useAtomValue(chessHistoryAtom);
   const parsedHistory = parseHistory(history);
   return (
-    <Card>
+    <Card className="w-full max-w-full">
       <CardHeader></CardHeader>
       <CardContent className="flex flex-col gap-2">
         {parsedHistory.map((t) => (

@@ -35,6 +35,8 @@ export default function Board({
 
   const files = color === "b" ? [...fileLetters].reverse() : fileLetters;
   const ranks = color === "b" ? [...rankNumbers].reverse() : rankNumbers;
+  const displayBoard =
+    color === "b" ? board.map((rank) => [...rank].reverse()).reverse() : board;
 
   return (
     <div
@@ -45,11 +47,10 @@ export default function Board({
         e.preventDefault();
       }}
     >
-      {board.map((rank, rankIndex) =>
+      {displayBoard.map((rank, rankIndex) =>
         rank.map((square, fileIndex) => {
-          const squareName =
-            `${files[fileIndex]}${ranks[rankIndex]}` as Square;
-          const isDark = (rankIndex + fileIndex) % 2 === 1;
+          const squareName = `${files[fileIndex]}${ranks[rankIndex]}` as Square;
+          let isDark = (rankIndex + fileIndex) % 2 === 1;
 
           return (
             <div
@@ -89,6 +90,7 @@ export default function Board({
                     color={square.color}
                     key={square.square}
                     square={square.square}
+                    playerColor={color}
                     onSelect={onSelect}
                     onHover={onHover}
                     onMove={(m) => {
