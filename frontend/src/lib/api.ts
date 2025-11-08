@@ -26,6 +26,4 @@ export const handleApiResponse = async <T>(
   return data;
 };
 
-export const hubSocket = api.ws;
-
 export const gameApi = treaty<GameApi>("localhost:3001");

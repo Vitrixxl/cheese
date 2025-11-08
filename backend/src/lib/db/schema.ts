@@ -6,7 +6,8 @@ import {
   index,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
-import { Outcome } from "@shared";
+import { GAME_TYPES, Outcome } from "@shared";
+import { relations } from "drizzle-orm";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -16,7 +17,6 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   image: text("image"),
-  elo: integer().notNull().default(500),
   puzzleLevel: integer().notNull().default(1),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
@@ -99,9 +99,9 @@ export const game = sqliteTable("game", {
     .$type<{ userId: string; content: string }[]>(),
   whiteTimer: integer().notNull(),
   blackTimer: integer().notNull(),
+  moves: integer().notNull(),
   createdAt: integer({ mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
-export type Game = typeof game.$inferSelect;
 
 export const move = sqliteTable("move", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -109,19 +109,15 @@ export const move = sqliteTable("move", {
   move: text().notNull(),
 });
 
-export type Move = typeof move.$inferSelect;
-
-export const friend = sqliteTable("friend", {
-  user1: text()
+export const usersToUsers = sqliteTable("users_to_users", {
+  userId1: text()
     .notNull()
     .references(() => user.id),
-  user2: text()
+  userId2: text()
     .notNull()
     .references(() => user.id),
-  chatId: integer().references(() => chat.id),
   createdAt: integer({ mode: "timestamp_ms" }).$defaultFn(() => new Date()),
 });
-export type Friends = typeof friend.$inferSelect;
 
 export const friendRequests = sqliteTable("friend_request", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -135,7 +131,6 @@ export const friendRequests = sqliteTable("friend_request", {
     .$defaultFn(() => new Date())
     .notNull(),
 });
-export type FriendRequests = typeof friendRequests.$inferSelect;
 
 export const group = sqliteTable("group", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -144,7 +139,6 @@ export const group = sqliteTable("group", {
     .references(() => chat.id)
     .notNull(),
 });
-export type Group = typeof group.$inferSelect;
 
 export const groupRequest = sqliteTable("group_request", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -161,9 +155,8 @@ export const groupRequest = sqliteTable("group_request", {
     .$defaultFn(() => new Date())
     .notNull(),
 });
-export type GroupRequest = typeof groupRequest.$inferSelect;
 
-export const groupUser = sqliteTable(
+export const usersToGroups = sqliteTable(
   "group_user",
   {
     userId: text()
@@ -179,13 +172,20 @@ export const groupUser = sqliteTable(
     index("group_user_user_idx").on(t.userId),
   ],
 );
-export type GroupUser = typeof groupUser.$inferSelect;
 
 export const chat = sqliteTable("chat", {
   id: integer().primaryKey({ autoIncrement: true }),
+  name: text(),
 });
 
-export type Chat = typeof chat.$inferSelect;
+export const usersToChats = sqliteTable("users_to_chats", {
+  userId: text("user_id")
+    .references(() => user.id)
+    .notNull(),
+  chatId: integer("chat_id")
+    .references(() => chat.id)
+    .notNull(),
+});
 
 export const message = sqliteTable("message", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -197,9 +197,10 @@ export const message = sqliteTable("message", {
     .notNull(),
   content: text(),
   gameId: integer().references(() => game.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
-
-export type Message = typeof message.$inferSelect;
 
 export const puzzle = sqliteTable("puzzle", {
   id: integer().primaryKey({ autoIncrement: true }),
@@ -208,4 +209,153 @@ export const puzzle = sqliteTable("puzzle", {
   themes: text().notNull(),
 });
 
+export const elo = sqliteTable(
+  "elo",
+  {
+    userId: text()
+      .references(() => user.id)
+      .notNull(),
+    gameType: text().notNull().$type<keyof typeof GAME_TYPES>(),
+    elo: integer().notNull().default(500),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.gameType] })],
+);
+
+export const usersToGames = sqliteTable("users_to_games", {
+  userId: text()
+    .references(() => user.id)
+    .notNull(),
+  gameId: text()
+    .references(() => game.id)
+    .notNull(),
+});
+
+// RELATIONS
+
+export const messagesRelations = relations(message, ({ one }) => ({
+  user: one(user, { fields: [message.userId], references: [user.id] }),
+  chat: one(chat, { fields: [message.chatId], references: [chat.id] }),
+  game: one(game, { fields: [message.gameId], references: [game.id] }),
+}));
+
+export const chatRelations = relations(chat, ({ many }) => ({
+  messages: many(message),
+  userLinks: many(usersToChats),
+  groups: many(group),
+}));
+
+export const groupsRelations = relations(group, ({ one, many }) => ({
+  chat: one(chat, { fields: [group.chatId], references: [chat.id] }),
+  userLinks: many(usersToGroups),
+}));
+
+export const gameRelations = relations(game, ({ one, many }) => ({
+  white: one(user, {
+    fields: [game.whiteId],
+    references: [user.id],
+    relationName: "white",
+  }),
+  black: one(user, {
+    fields: [game.blackId],
+    references: [user.id],
+    relationName: "black",
+  }),
+  users: many(usersToGames),
+}));
+
+export const userRelations = relations(user, ({ many }) => ({
+  messages: many(message),
+  chatLinks: many(usersToChats),
+  groupLinks: many(usersToGroups),
+  friendLinks1: many(usersToUsers, { relationName: "user1" }),
+  friendLinks2: many(usersToUsers, { relationName: "user2" }),
+  games: many(usersToGames),
+  elos: many(elo),
+}));
+
+export const usersToGamesRelations = relations(usersToGames, ({ one }) => ({
+  user: one(user, {
+    fields: [usersToGames.userId],
+    references: [user.id],
+  }),
+  game: one(game, {
+    fields: [usersToGames.gameId],
+    references: [game.id],
+  }),
+}));
+
+export const elosRelation = relations(elo, ({ one }) => ({
+  user: one(user, {
+    fields: [elo.userId],
+    references: [user.id],
+  }),
+}));
+
+export const usersToChatsRelations = relations(usersToChats, ({ one }) => ({
+  user: one(user, {
+    fields: [usersToChats.userId],
+    references: [user.id],
+  }),
+  chat: one(chat, {
+    fields: [usersToChats.chatId],
+    references: [chat.id],
+  }),
+}));
+
+export const usersToUsersRelations = relations(usersToUsers, ({ one }) => ({
+  user1: one(user, {
+    fields: [usersToUsers.userId1],
+    references: [user.id],
+    relationName: "user1",
+  }),
+  user2: one(user, {
+    fields: [usersToUsers.userId2],
+    references: [user.id],
+    relationName: "user2",
+  }),
+}));
+
+export const usersToGroupRelation = relations(usersToGroups, ({ one }) => ({
+  user: one(user, {
+    fields: [usersToGroups.userId],
+    references: [user.id],
+  }),
+  group: one(group, {
+    fields: [usersToGroups.groupId],
+    references: [group.id],
+  }),
+}));
+
+export const friendRequestsRelations = relations(friendRequests, ({ one }) => ({
+  from: one(user, {
+    fields: [friendRequests.from],
+    references: [user.id],
+  }),
+  to: one(user, {
+    fields: [friendRequests.to],
+    references: [user.id],
+  }),
+}));
+
+export const groupRequestsRelations = relations(groupRequest, ({ one }) => ({
+  user: one(user, {
+    fields: [groupRequest.id],
+    references: [user.id],
+  }),
+  group: one(group, {
+    fields: [groupRequest.groupId],
+    references: [group.id],
+  }),
+}));
+
+// TYPES
 export type Puzzle = typeof puzzle.$inferSelect;
+export type Message = typeof message.$inferSelect;
+export type InsertMessage = typeof message.$inferInsert;
+export type Chat = typeof chat.$inferSelect;
+export type Group = typeof group.$inferSelect;
+export type GroupRequest = typeof groupRequest.$inferSelect;
+export type FriendRequests = typeof friendRequests.$inferSelect;
+export type Move = typeof move.$inferSelect;
+export type Game = typeof game.$inferSelect;
+export type Elo = typeof elo.$inferSelect;

@@ -14,7 +14,6 @@ import { useAtomValue } from "jotai";
 
 export default function AppPage() {
   const driver = useAtomValue(currentDriverAtom);
-  console.log({ driver });
 
   return (
     <>
@@ -23,7 +22,7 @@ export default function AppPage() {
       ) : driver == "online" ? (
         <GameDrivenBoard />
       ) : null}
-      <LoadingGameDialog />
+      {/* <LoadingGameDialog /> */}
     </>
   );
 }

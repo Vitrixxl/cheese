@@ -10,7 +10,9 @@ type PieceProps = {
   color: Color;
   size?: 50 | 75 | 100 | 150 | 200;
   square: Square;
-  playerColor: Color;
+  playerColor: Color | null;
+  left: string;
+  top: string;
   onSelect: (square: Square | null) => void;
   onHover: (square: Square | null) => void;
   onMove: (move: LocalMove) => void;
@@ -21,6 +23,8 @@ export default function Piece({
   type,
   color,
   size = 150,
+  left,
+  top,
   square,
   boardRef,
   playerColor,
@@ -42,7 +46,7 @@ export default function Piece({
   });
 
   React.useEffect(() => {
-    if (isDragging && playerColor == color) onSelect(square);
+    if (isDragging && (!playerColor || playerColor == color)) onSelect(square);
   }, [isDragging]);
 
   const img = (
@@ -50,13 +54,15 @@ export default function Piece({
       src={src}
       draggable={false}
       className={cn(
-        isDragging ? "fixed -translate-1/2 z-20" : "h-10/12 relative",
+        isDragging
+          ? "fixed -translate-1/2 z-10"
+          : "absolute size-[10%] transition-all duration-1000",
       )}
       style={{
-        left: coordinates ? coordinates.x + "px" : "",
-        top: coordinates ? coordinates.y + "px" : "",
-        maxWidth: dragSize || "100%",
-        maxHeight: dragSize || "100%",
+        left: coordinates ? coordinates.x + "px" : left,
+        top: coordinates ? coordinates.y + "px" : top,
+        maxWidth: dragSize || "10%",
+        maxHeight: dragSize || "10%",
       }}
       ref={ref}
     />

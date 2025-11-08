@@ -4,7 +4,7 @@ import { createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth";
 import * as schema from "./db/schema";
 import { db } from "./db";
-import { socketinator } from "./socket";
+import { GAME_TYPES } from "@shared";
 
 export const auth = betterAuth({
   baseURL: "http://localhost:6969",
@@ -15,17 +15,17 @@ export const auth = betterAuth({
   }),
   user: {
     additionalFields: {
-      elo: {
-        type: "number",
-        defaultValue: 500,
-        input: false,
-        required: true,
-      },
       puzzleLevel: {
         type: "number",
         defaultValue: 0,
         input: false,
         required: true,
+      },
+      bio: {
+        type: "string",
+        defaultValue: null,
+        input: false,
+        required: false,
       },
     },
   },
@@ -38,22 +38,16 @@ export const auth = betterAuth({
   },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
-      if (ctx.path.startsWith("/sign-out") && ctx.context.session) {
-        socketinator.deleteSession({
-          userId: ctx.context.session.user.id,
-          token: ctx.context.session.session.id,
-        });
-        return;
-      }
-      if (ctx.context.newSession || ctx.context.session) {
-        const sessionData = ctx.context.session || ctx.context.newSession;
-        if (!sessionData) return;
-
-        socketinator.setSession({
-          token: sessionData.session.token,
-          exp: sessionData.session.expiresAt.getTime(),
-          userId: sessionData.user.id,
-        });
+      console.log({ path: ctx.path });
+      if (ctx.path.startsWith("/callback") && ctx.context.newSession) {
+        const userId = ctx.context.newSession.user.id;
+        await db.insert(schema.elo).values(
+          Object.keys(GAME_TYPES).map((k) => ({
+            userId,
+            gameType: k as keyof typeof GAME_TYPES,
+            elo: 500,
+          })),
+        );
       }
     }),
   },

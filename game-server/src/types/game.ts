@@ -12,7 +12,7 @@ export type WithOptionalWS<T> = {
 export type ServerGame = {
   id: string;
   users: Record<User["id"], WithOptionalWS<WithColor<User>>>;
-  opponentByUserId: Record<User["id"], WithOptionalWS<WithColor<User>>>;
+  opponentByUserId: Record<User["id"], User["id"]>;
   gameType: GameType;
   chess: Chess;
   drawOffer: User["id"] | null;

@@ -39,9 +39,6 @@ export const INITIALS_TIMERS: Record<GameType, number> = {
   "10 | 5": 600_000,
   "15 | 10": 900_000,
   "30 min": 1_800_000,
-  Daily: 86_400_000, // 1 day
-  "Daily 960": 86_400_000, // same as Daily
-  "Custom Long": 3_600_000, // example: 1 hour default for custom
 };
 
 export const setColors = (users: User[]): Player[] => {

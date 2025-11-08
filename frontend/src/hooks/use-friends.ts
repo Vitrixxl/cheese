@@ -56,7 +56,7 @@ export const useSearchFriend = (query: string) => {
   return useQuery({
     queryKey: ["search-friend", query],
     queryFn: async () => {
-      const { data, error } = await api.social.users.search.get({
+      const { data, error } = await api.friend.users.search.get({
         query: { q: query },
       });
       console.error(error);

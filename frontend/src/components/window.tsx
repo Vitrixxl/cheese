@@ -26,13 +26,6 @@ export const useWindows = () => {
   const [windows, setWindows] = useAtom(windowsAtom);
   const focusWindow = (id: string) => {
     setWindows((prev) => {
-      console.log(prev);
-      console.log(
-        [
-          ...prev.filter((w) => w.id != id),
-          prev.find((w) => w.id == id),
-        ].filter((w) => w != undefined),
-      );
       return [
         ...prev.filter((w) => w.id != id),
         prev.find((w) => w.id == id),

@@ -15,7 +15,7 @@ export default function AppLayout() {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="max-h-full overflow-hidden">
-            <div className="h-full max-h-full overflow-hidden grid grid-rows-1 p-4">
+            <div className="h-full max-h-full overflow-hidden p-4 flex-1 w-full">
               <Outlet />
             </div>
           </SidebarInset>

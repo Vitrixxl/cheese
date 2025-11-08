@@ -1,6 +1,6 @@
-import { gameIdAtom } from "@/store";
+import { endGameDialogOpenAtom, gameIdAtom, gameMessagesAtom } from "@/store";
 import React from "react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { gameWsAtom } from "@/store/ws";
 import { tryCatch } from "@shared";
 import { gameApi } from "@/lib/api";
@@ -12,7 +12,9 @@ export default function useGameWs() {
   const [ws, setWs] = useAtom(gameWsAtom);
   const [gameId] = useAtom(gameIdAtom);
   const { data: authData } = auth.useSession();
-  const { applyLocalMove, reset } = useBoardController();
+  const { applyLocalMove, reset, setOutcome } = useBoardController();
+  const setGameMessages = useSetAtom(gameMessagesAtom);
+  const setEndGameDialogOpen = useSetAtom(endGameDialogOpenAtom);
   const handleClose = () => {
     console.log("closing");
     setWs(null);
@@ -24,16 +26,23 @@ export default function useGameWs() {
         break;
       }
       case "move": {
+        console.log({ payload });
         applyLocalMove({ ...payload.move });
         break;
       }
-      case "message":
+      case "message": {
+        console.log({ payload });
+        setGameMessages((prev) => [...prev, payload]);
+        break;
+      }
       case "drawOffer":
       case "start": {
         reset();
         break;
       }
       case "end": {
+        setOutcome(payload);
+        setEndGameDialogOpen(true);
         break;
       }
       case "disconnection":

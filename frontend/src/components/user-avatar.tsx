@@ -1,5 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
 const avatarVariants = cva("flex justify-center items-center", {
   variants: {
@@ -18,9 +20,13 @@ export const UserAvatar = ({
   size,
   url,
   name,
+  className,
+  innerClassName,
 }: VariantProps<typeof avatarVariants> & {
   url?: string | null;
   name: string;
+  className?: string;
+  innerClassName?: string;
 }) => {
   const parts = name.split(" ");
   let displayLetters;
@@ -31,14 +37,17 @@ export const UserAvatar = ({
   }
 
   return (
-    <Avatar className={avatarVariants({ size })}>
-      <AvatarImage
-        className={avatarVariants({ size })}
-        src={url ?? undefined}
-      />
-      <AvatarFallback className={avatarVariants({ size })}>
+    <Avatar className={cn(avatarVariants({ size }), className)}>
+      <AvatarImage src={url ?? undefined} className={cn(innerClassName)} />
+      <AvatarFallback className={cn(innerClassName)}>
         {displayLetters}
       </AvatarFallback>
     </Avatar>
   );
+};
+
+export const UserAvatarSkeleton = ({
+  size,
+}: VariantProps<typeof avatarVariants>) => {
+  return <Skeleton className={cn(avatarVariants({ size }), "rounded-full")} />;
 };

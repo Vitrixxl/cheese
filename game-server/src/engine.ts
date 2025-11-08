@@ -50,7 +50,6 @@ export class GameInstance {
       messages: this.game.messages,
       timers: this.game.timers,
     });
-    console.log(result);
   };
 
   private startTimers = () => {
@@ -82,10 +81,11 @@ export class GameInstance {
 
   addConnection = ({ userId, ws }: { userId: User["id"]; ws: ElysiaWS }) => {
     this.game.users[userId].ws = ws;
-    this.send("connection", this.game.opponentByUserId[userId].id, null);
+    const opponentId = this.game.opponentByUserId[userId];
+    this.send("connection", opponentId, null);
     if (!this.game.firstConRecord[userId]) {
-      this.game.firstConRecord[userId] = false;
-      if (this.game.firstConRecord[this.game.opponentByUserId[userId].id]) {
+      this.game.firstConRecord[userId] = true;
+      if (this.game.firstConRecord[opponentId]) {
         this.startGame();
       }
       return;
@@ -94,13 +94,13 @@ export class GameInstance {
       timers: this.game.timers,
       messages: this.game.messages,
       gameType: this.game.gameType,
-      opponent: this.game.opponentByUserId[userId],
+      opponent: this.game.users[opponentId],
     });
   };
 
   dropConnection = ({ userId }: { userId: User["id"] }) => {
     this.game.users[userId].ws = null;
-    this.send("disconnection", this.game.opponentByUserId[userId].id, null);
+    this.send("disconnection", this.game.opponentByUserId[userId], null);
   };
 
   handleMessage = ({
@@ -108,11 +108,14 @@ export class GameInstance {
     payload,
     userId,
   }: ChessClientMessage & { userId: User["id"] }) => {
-    const opponentId = this.game.opponentByUserId[userId].id;
+    const opponentId = this.game.opponentByUserId[userId];
     switch (key) {
       case "move": {
         const { error } = tryCatch(() => this.game.chess.move(payload.move));
-        if (error) return;
+        if (error) {
+          console.error(error);
+          return;
+        }
 
         this.send("move", opponentId, {
           move: payload.move,
@@ -137,11 +140,14 @@ export class GameInstance {
           userId,
           content: payload.content,
         });
-        this.send("message", opponentId, payload);
+        this.send("message", opponentId, { userId, content: payload.content });
         break;
       }
       case "resign": {
-        this.finishGame("resign", this.game.opponentByUserId[userId].color);
+        this.finishGame(
+          "resign",
+          this.game.users[this.game.opponentByUserId[userId]].color,
+        );
         break;
       }
       case "drawOffer": {

@@ -52,8 +52,8 @@ const app = new Elysia()
             },
           },
           opponentByUserId: {
-            [user2.id]: { ...user1, color, ws: null },
-            [user1.id]: { ...user2, color: color == "w" ? "b" : "w", ws: null },
+            [user2.id]: user1.id,
+            [user1.id]: user2.id,
           },
           timers: {
             b: initialTimer,
@@ -70,7 +70,7 @@ const app = new Elysia()
       );
       return {
         newGameId,
-        users: Object.values(completUsers),
+        users: [completUsers[user1.id], completUsers[user2.id]],
         initialTimer,
       };
     },
@@ -111,7 +111,7 @@ const app = new Elysia()
       const userId = ws.data.query.userId;
       const gameId = ws.data.query.gameId;
       const currentGame = gameMap.get(gameId)!;
-      currentGame.addConnection({ userId, ws });
+      currentGame.dropConnection({ userId });
     },
     message: (ws, message) => {
       const { data, error } = messageSchema.safeParse(message);
@@ -125,10 +125,8 @@ const app = new Elysia()
       currentGame.handleMessage({ ...data, userId });
     },
     beforeHandle: ({ status, query: { userId, gameId } }) => {
-      console.log(userId, gameId);
       const currentGame = gameMap.get(gameId);
       if (!currentGame || !currentGame.game.users[userId]) {
-        console.log("erro");
         return status("Unauthorized");
       }
     },
@@ -142,6 +140,5 @@ const app = new Elysia()
 console.log(
   `🦊 Game server is running at ${app.server?.hostname}:${app.server?.port}`,
 );
-console.log(`dza`);
 
 export type GameApi = typeof app;

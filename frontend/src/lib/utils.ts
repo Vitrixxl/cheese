@@ -1,5 +1,4 @@
-import type { LocalMove } from "@/types/chess";
-import type { Move, PieceSymbol } from "chess.js";
+import type { PieceSymbol } from "chess.js";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -46,8 +45,8 @@ export const pieceImgMap: Record<PieceSymbol, { w: string; b: string }> = {
   },
 };
 
-export const toChessMove = (move: LocalMove): Move => {
-  return {
-    ...move,
-  };
+export const capitalize = (str: string) => {
+  return `${str[0].toUpperCase()}${str.slice(1, str.length)}`;
 };
+
+export const parseTimer = () => {};

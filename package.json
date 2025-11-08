@@ -10,7 +10,7 @@
     "shared"
   ],
   "scripts": {
-    "dev:front": "bun --cwd frontend dev",
+    "dev:front": "bun --cwd frontend dev --host",
     "dev:back": "bun --cwd backend dev",
     "dev:game": "bun --cwd game-server dev",
     "dev": "bunx --bun concurrently \"bun run dev:front\" \"bun run dev:back\" \"bun run dev:game\"",
@@ -21,7 +21,8 @@
     "db:studio": "bunx drizzle-kit studio"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.5",
+    "better-sqlite3": "^12.4.1",
+    "drizzle-kit": "^0.31.6",
     "typescript": "^5.9.3"
   },
   "overrides": {

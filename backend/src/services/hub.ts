@@ -3,7 +3,7 @@ import type { User } from "../lib/auth";
 import { WsMessage, WsServerMessage } from "@backend/lib/types";
 import { ElysiaWS } from "elysia/ws";
 import { gameServerApi } from "backend/lib/api";
-import { getUsersById } from "./social";
+import { getUsersById } from "./friend";
 
 const MAX_ELO_DIFF = 50;
 
@@ -29,10 +29,13 @@ export class MatchmakingService {
     this.queueMap.forEach((queue, gameType) => {
       const players = Array.from(queue.values());
       players.forEach((player) => {
+        if (!queue.has(player.id)) return;
+
         let bestMatch: { user: User; diff: number } | null = null;
 
         for (const candidate of players) {
           if (candidate.id === player.id) continue;
+          if (!queue.has(candidate.id)) continue;
           const diff = Math.abs(player.elo - candidate.elo);
           if (diff > MAX_ELO_DIFF) continue;
           if (!bestMatch || bestMatch.diff > diff) {
@@ -41,6 +44,7 @@ export class MatchmakingService {
         }
 
         if (!bestMatch) return;
+        console.log("match");
         this.createGame({ gameType, users: [player, bestMatch.user] });
         queue.delete(player.id);
         queue.delete(bestMatch.user.id);
@@ -92,12 +96,12 @@ export class MatchmakingService {
       gameType: gameType,
       users: users,
     });
+    console.log({ data });
     if (error) {
       console.error(error);
       return;
     }
     for (const user of users) {
-      console.log(user);
       this.send("game", user.id, {
         users: data.users,
         gameType,
@@ -113,7 +117,6 @@ export class MatchmakingService {
     payload: WsServerMessage[K],
   ) {
     const wsArray = this.userWsMap[userId];
-    console.log({ wsArray });
     if (!wsArray || wsArray.length == 0) return;
     for (const ws of wsArray) {
       ws.send(

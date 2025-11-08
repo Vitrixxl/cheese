@@ -3,7 +3,9 @@ import {
   colorAtom,
   currentDriverAtom,
   gameIdAtom,
+  initialTimerAtom,
   isInQueueAtom,
+  playersAtom,
   store,
 } from "@/store";
 import type { WsServerMessageWithKey } from "@backend";
@@ -27,6 +29,7 @@ export default function useHubWs() {
 
     switch (key) {
       case "game": {
+        console.log({ payload });
         store.set(gameIdAtom, payload.newGameId);
         store.set(currentDriverAtom, "online");
         store.set(isInQueueAtom, false);
@@ -34,6 +37,8 @@ export default function useHubWs() {
           colorAtom,
           payload.users.find((u) => u.id == user.id)?.color || null,
         );
+        store.set(initialTimerAtom, payload.initialTimer);
+        store.set(playersAtom, payload.users);
         break;
       }
 

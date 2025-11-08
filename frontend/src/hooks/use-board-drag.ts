@@ -8,7 +8,7 @@ type UseBoardDragParams = {
   boardRef: React.RefObject<HTMLDivElement | null>;
   square: Square;
   color: Color;
-  playerColor: Color;
+  playerColor: Color | null;
   onMove: (move: LocalMove) => void;
   onHover: (square: Square | null) => void;
 };
@@ -50,7 +50,7 @@ export const useBoardDrag = ({
     onHover(null);
     setCoordinates(null);
     setIsDragging(false);
-    if (hoverRef.current && color == playerColor) {
+    if (hoverRef.current && (!playerColor || color == playerColor)) {
       onMove({
         from: square,
         to: hoverRef.current,
@@ -92,7 +92,7 @@ export const useBoardDrag = ({
     hoverRef.current =
       `${fileLetters[fileIndex]}${rankNumbers[rankIndex]}` as Square;
 
-    if (playerColor == color) {
+    if (!playerColor || playerColor == color) {
       onHover(hoverRef.current);
     }
     setCoordinates({

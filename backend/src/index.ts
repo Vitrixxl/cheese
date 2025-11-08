@@ -1,10 +1,13 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { auth } from "./lib/auth";
-import { socialRoutes } from "./routes/social";
+import { chatRoutes } from "./routes/chat";
+import { friendRoutes } from "./routes/friend";
+import { groupRoutes } from "./routes/group";
 import { puzzleRoutes } from "./routes/puzzle";
 import { gameRoutes } from "./routes/game";
 import { wsRoutes } from "./routes/ws";
+import { profilesRoutes } from "./routes/profile";
 export * from "./lib/types";
 
 const app = new Elysia()
@@ -14,10 +17,12 @@ const app = new Elysia()
     }),
   )
   .mount(auth.handler)
-  .use(socialRoutes)
+  .use(friendRoutes)
+  .use(chatRoutes)
+  .use(groupRoutes)
+  .use(profilesRoutes)
   .use(puzzleRoutes)
   .use(gameRoutes)
-
   .use(wsRoutes);
 
 app.listen(6969);
