@@ -10,7 +10,6 @@ import { ChatWithUsersAndMessages, User } from "@shared";
 
 export const isInChat = async (userId: User["id"], chatId: Chat["id"]) => {
   const result = await db.query.usersToChats.findFirst({
-    columns: {},
     where: (chat, w) =>
       w.and(w.eq(chat.userId, userId), w.eq(chat.chatId, chatId)),
   });
@@ -41,6 +40,7 @@ export const getChats = async (
 
   return chats.map((c) => ({
     id: c.id,
+    name: c.name,
     users: c.userLinks.map((ul) => ul.user),
     messages: c.messages,
   }));
@@ -78,8 +78,6 @@ export const insertChatMessage = async (
 ) => {
   const canWrite = await isInChat(userId, chatId);
   if (!canWrite) return false;
-  await db
-    .insert(message)
-    .values({ ...messagePayload, userId, chatId });
+  await db.insert(message).values({ ...messagePayload, userId, chatId });
   return true;
 };

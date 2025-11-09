@@ -1,4 +1,4 @@
-import { Group, Message, Game, Chat } from "@backend/lib/db/schema";
+import { Group, Message, Game, Chat, Elo } from "@backend/lib/db/schema";
 import type { User } from "@backend/lib/auth";
 export type { User } from "@backend/lib/auth";
 
@@ -21,8 +21,8 @@ export interface MessageWithGame extends Message {
 }
 
 export interface GameWithUsers extends Omit<Game, "whiteId" | "blackId"> {
-  white: User;
-  black: User;
+  white: User & { elos: Elo[] };
+  black: User & { elos: Elo[] };
 }
 
 export type ChatWithUsersAndMessages = Chat & {

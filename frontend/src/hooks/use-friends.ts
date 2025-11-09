@@ -1,14 +1,38 @@
-import type { FriendWithChat } from "@backend/services/social";
 import { api } from "@/lib/api";
 import { queryClient } from "@/providers/query-provider";
-import type { FriendRequests } from "@shared";
+import type { FriendRequests, User } from "@shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import React from "react";
+
+export const useFriendRequests = () => {
+  return useQuery({
+    queryKey: ["friend-requests"],
+    queryFn: async () => {
+      const { data, error } = await api.friend["friend-requests"].get();
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+export const useSendFriendRequest = () => {
+  const [isSending, setIsSending] = React.useState(false);
+  return {
+    isSending,
+    sendFriendRequest: async (userId: User["id"]) => {
+      setIsSending(true);
+      const result = await api.friend["friend-request"].new({ userId }).post();
+      setIsSending(false);
+      return result;
+    },
+  };
+};
 
 export const useFriends = () => {
   return useQuery<FriendWithChat[]>({
     queryKey: ["friends"],
     queryFn: async () => {
-      const { data, error } = await api.social.friends.get();
+      const { data, error } = await api.friend.get();
       if (error) throw error;
       return data;
     },
@@ -28,26 +52,24 @@ export const useProcessFriendRequest = () => {
   return useMutation({
     mutationKey: ["friend"],
     mutationFn: async ({
-      accept,
-      requestId,
+      userId,
+      response,
     }: {
-      accept: boolean;
-      requestId: number;
+      response: boolean;
+      userId: User["id"];
     }) => {
-      api.social["friend-requests"]({ requestId })({
-        action: accept ? "accept" : "deny",
-      });
+      api.friend["friend-request"]
+        .response({ userId })
+        .post({}, { query: { response } });
     },
-    onMutate: ({ accept, requestId }, _) => {
-      if (!accept) {
-        const prevRequest = queryClient.getQueryData<FriendRequests[]>([
-          "friend-requests",
-        ]);
-        queryClient.setQueryData<FriendRequests[]>(
-          ["friend-requests"],
-          prevRequest ? [...prevRequest.filter((r) => r.id != requestId)] : [],
-        );
-      }
+    onMutate: ({ userId }, _) => {
+      const prevRequest = queryClient.getQueryData<FriendRequests[]>([
+        "friend-requests",
+      ]);
+      queryClient.setQueryData<FriendRequests[]>(
+        ["friend-requests"],
+        prevRequest ? [...prevRequest.filter((r) => r.from != userId)] : [],
+      );
     },
   });
 };

@@ -37,8 +37,16 @@ export const getProfileByUserId = async (
               createdAt: true,
             },
             with: {
-              white: true,
-              black: true,
+              white: {
+                with: {
+                  elos: true,
+                },
+              },
+              black: {
+                with: {
+                  elos: true,
+                },
+              },
             },
           },
         },

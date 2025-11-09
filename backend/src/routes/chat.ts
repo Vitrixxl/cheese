@@ -23,9 +23,9 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
     },
   )
   .get(
-    "/messages/:id",
-    async ({ params: { id }, user, status, query: { limit, cursor } }) => {
-      const messages = await getChatMessage(user.id, id, limit, cursor);
+    "/messages/:chatId",
+    async ({ params: { chatId }, user, status, query: { limit, cursor } }) => {
+      const messages = await getChatMessage(user.id, chatId, limit, cursor);
       if (messages == null) {
         return status(403, {
           message: "Unauthorized",
@@ -40,7 +40,7 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
     {
       auth: true,
       params: z.object({
-        id: z.coerce.number(),
+        chatId: z.coerce.number(),
       }),
       query: z.object({
         limit: z.coerce.number().default(50),
@@ -49,7 +49,7 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
     },
   )
   .post(
-    "/:chatId/messages",
+    "/messages/:chatId",
     async ({ params: { chatId }, user, status, body }) => {
       const result = await insertChatMessage(user.id, chatId, body);
       if (!result) {
@@ -66,7 +66,7 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
       }),
       body: z.object({
         content: z.string().optional(),
-        gameId: z.coerce.number().optional(),
+        gameId: z.string().optional(),
       }),
     },
   );

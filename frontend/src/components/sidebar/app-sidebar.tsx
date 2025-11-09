@@ -21,17 +21,17 @@ import { Link } from "react-router";
 
 const links = [
   {
-    icon: <LucidePuzzle />,
+    icon: <LucidePuzzle className="text-green-500" />,
     label: "Puzzles",
     to: "/puzzles",
   },
   {
-    icon: <LucideChartNetwork />,
+    icon: <LucideChartNetwork className="text-violet-500" />,
     label: "Analysis",
     to: "/analysis",
   },
   {
-    icon: <LucideGraduationCap />,
+    icon: <LucideGraduationCap className="text-blue-500" />,
     label: "Lessons",
     to: "/lessons",
   },
@@ -63,12 +63,7 @@ export default function AppSidebar() {
             <SidebarGroup className="gap-2">
               {links.map(({ to, icon, label }) => (
                 <SidebarMenu>
-                  <SidebarMenuButton
-                    asChild
-                    variant={"outline"}
-                    size="lg"
-                    className="text-lg gap-4 relative"
-                  >
+                  <SidebarMenuButton asChild className="text-lg gap-4 relative">
                     <Link to={to}>
                       {icon}
                       {label}

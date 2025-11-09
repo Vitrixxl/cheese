@@ -94,8 +94,8 @@ export const insertFriendRequest = async (
   userId: User["id"],
   friendId: User["id"],
 ) => {
-  const canWrite = await isFriend(userId, friendId);
-  if (!canWrite) return null;
+  const friend = await isFriend(userId, friendId);
+  if (friend) return null;
   const friendResult = await getUsersById([friendId]);
   if (friendResult.length == 0) return false;
   await db.insert(friendRequests).values({
@@ -114,12 +114,12 @@ export const handleFriendRequestResponse = async (
     where: (fr, w) => w.and(w.eq(fr.from, friendId), w.eq(fr.to, userId)),
   });
   if (!canWrite) return null;
+  await db
+    .delete(friendRequests)
+    .where(
+      and(eq(friendRequests.to, userId), eq(friendRequests.from, friendId)),
+    );
   if (!response) {
-    await db
-      .delete(friendRequests)
-      .where(
-        and(eq(friendRequests.to, userId), eq(friendRequests.from, friendId)),
-      );
     return true;
   }
   await db.insert(usersToUsers).values({

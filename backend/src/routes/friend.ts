@@ -105,8 +105,8 @@ export const friendRoutes = new Elysia({ prefix: "friend" })
     },
   )
   .post(
-    "friend-request/response/:userId/:response",
-    async ({ user, params: { userId, response }, status }) => {
+    "friend-request/response/:userId",
+    async ({ user, params: { userId }, query: { response }, status }) => {
       const result = await handleFriendRequestResponse(
         user.id,
         userId,
@@ -123,6 +123,8 @@ export const friendRoutes = new Elysia({ prefix: "friend" })
       auth: true,
       params: z.object({
         userId: z.string(),
+      }),
+      query: z.object({
         response: z.coerce.boolean(),
       }),
     },

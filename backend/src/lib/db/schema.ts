@@ -6,7 +6,7 @@ import {
   index,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
-import { GAME_TYPES, Outcome } from "@shared";
+import { GAME_TYPES, GameType, Outcome } from "@shared";
 import { relations } from "drizzle-orm";
 
 export const user = sqliteTable("user", {
@@ -86,6 +86,8 @@ export const verification = sqliteTable("verification", {
 
 export const game = sqliteTable("game", {
   id: text().primaryKey(),
+  gameType: text().notNull().$type<keyof typeof GAME_TYPES>(),
+  exactGameType: text().notNull().$type<GameType>(),
   whiteId: text()
     .references(() => user.id)
     .notNull(),
@@ -196,7 +198,7 @@ export const message = sqliteTable("message", {
     .references(() => chat.id)
     .notNull(),
   content: text(),
-  gameId: integer().references(() => game.id),
+  gameId: text().references(() => game.id),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
     .notNull(),

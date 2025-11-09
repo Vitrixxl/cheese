@@ -9,11 +9,12 @@ import { LucideSearch } from "lucide-react";
 import ChatItemSkeleton from "./chat-item-skeleton";
 import ChatItem from "./chat-item";
 import AddFriendPopover from "./add-friend-popover";
+import { cn } from "@/lib/utils";
 
 export default function ChatSidebar() {
   const { data, error, isLoading, fetchNextPage } = useChats();
   return (
-    <div className="bg-card p-2 rounded-xl border grid grid-rows-[auto_minmax(0,1fr)] w-sm gap-2">
+    <div className="bg-card p-2 rounded-xl border grid grid-rows-[auto_minmax(0,1fr)] w-xs h-fit">
       <div className="flex gap-2">
         <InputGroup>
           <InputGroupInput />
@@ -24,7 +25,13 @@ export default function ChatSidebar() {
         <AddFriendPopover />
       </div>
       <List
-        className="flex flex-col gap-2"
+        className={cn(
+          "flex flex-col h-fit",
+          data &&
+            data.pages.length > 0 &&
+            data.pages[0].chats.length > 0 &&
+            "mt-2",
+        )}
         onMaxScroll={() => !error && !isLoading && fetchNextPage()}
       >
         {isLoading ? (

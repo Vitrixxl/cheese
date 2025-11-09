@@ -13,11 +13,11 @@ export const ChatMessage = ({ user, message, isOwn }: MessageProps) => {
   return (
     <div
       className={cn(
-        "w-4/5 flex flex-col gap-2",
+        "w-4/5 flex flex-col gap-1",
         isOwn ? "ml-auto items-end" : "mr-auto",
       )}
     >
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center ">
         <p className="text-muted-foreground text-sm">
           {isOwn ? "You" : user.name}
         </p>
@@ -25,7 +25,7 @@ export const ChatMessage = ({ user, message, isOwn }: MessageProps) => {
       </div>
       <div
         className={cn(
-          "rounded-lg px-2 py-1",
+          "rounded-lg px-2 py-1 break-all",
           isOwn ? "bg-primary text-primary-foreground" : "bg-secondary",
         )}
       >
