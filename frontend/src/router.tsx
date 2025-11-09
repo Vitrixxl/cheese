@@ -4,6 +4,7 @@ import AppPage from "./app/page";
 import SocialLayout from "./app/social/layout";
 import SocialUserPage from "./app/social/user/page";
 import ChatPage from "./app/social/chat/page";
+import PuzzleDrivenBoard from "./components/drived-board/puzzle/puzzle-driven-board";
 export default function Router() {
   return (
     <BrowserRouter>
@@ -14,6 +15,7 @@ export default function Router() {
             <Route path="user/:userId" element={<SocialUserPage />}></Route>
             <Route path="chat/:chatId" element={<ChatPage />} />
           </Route>
+          <Route path="/puzzles" element={<PuzzleDrivenBoard />}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

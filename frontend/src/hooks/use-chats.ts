@@ -1,7 +1,12 @@
 import { api } from "@/lib/api";
 import type { InfiniteData } from "@tanstack/react-query";
 import { queryClient } from "@/providers/query-provider";
-import type { Chat, ChatWithUsersAndMessages, Message } from "@shared";
+import {
+  type ChatData,
+  type Chat,
+  type ChatWithUsersAndMessages,
+  type Message,
+} from "@shared";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 
 export const useChats = () => {
@@ -91,7 +96,12 @@ export const useSendChatMessage = (chatId: Chat["id"]) => {
 };
 
 export const useChatData = (chatId: Chat["id"]) => {
-  return useQuery<Omit<ChatWithUsersAndMessages, "messages">>({
+  return useQuery<ChatData>({
     queryKey: ["chat-data", chatId],
+    queryFn: async () => {
+      const { data, error } = await api.chats({ chatId }).data.get();
+      if (error) throw new Error(error.value.message);
+      return data;
+    },
   });
 };

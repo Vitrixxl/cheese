@@ -14,6 +14,7 @@ type PromotionProps = {
   squareName: Square;
   rankIndex: number;
   ranks: number[];
+  playerColor: Color;
 };
 
 export default function Promotion({
@@ -24,6 +25,7 @@ export default function Promotion({
   squareName,
   rankIndex,
   ranks,
+  playerColor,
 }: PromotionProps) {
   if (!needPromotion || needPromotion.to !== squareName) return null;
   if (ranks[rankIndex] !== 8 && ranks[rankIndex] !== 1) return null;
@@ -34,7 +36,8 @@ export default function Promotion({
   if (!squareEl) return null;
 
   const rect = squareEl.getBoundingClientRect();
-  const isTopRank = ranks[rankIndex] === 8;
+  const isTopRank =
+    ranks[rankIndex] === 8 ? (playerColor == "w" ? true : false) : true;
 
   return createPortal(
     <div
@@ -48,7 +51,7 @@ export default function Promotion({
         className="absolute bg-sidebar rounded-2xl p-4 shadow-2xl border flex flex-col gap-2"
         style={{
           left: rect.left - 6,
-          top: isTopRank ? rect.bottom : rect.top - rect.height * 4,
+          top: isTopRank ? rect.top : rect.bottom - rect.height * 4,
           width: rect.width + 12,
         }}
         onClick={(e) => e.stopPropagation()}

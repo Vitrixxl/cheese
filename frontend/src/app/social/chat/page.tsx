@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 export default function ChatPage() {
   const { chatId } = useParams();
+  const user = useUser();
   const navigate = useNavigate();
   const { data, isLoading, error } = useChatMessages(Number(chatId));
   const { mutate } = useSendChatMessage(Number(chatId));
@@ -38,7 +39,6 @@ export default function ChatPage() {
 
   const { data: chatData } = useChatData(Number(chatId));
   if (!data || !chatData) return null;
-  const user = useUser();
 
   return (
     <div className="border rounded-lg grid grid-rows-[auto_minmax(0,1fr)_auto] max-w-lg w-full bg-card grid-cols-1">

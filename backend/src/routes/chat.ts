@@ -1,7 +1,12 @@
 import Elysia from "elysia";
 import z from "zod";
 import { authMacro } from "../macros/auth";
-import { getChatMessage, getChats, insertChatMessage } from "../services/chat";
+import {
+  getChatData,
+  getChatMessage,
+  getChats,
+  insertChatMessage,
+} from "../services/chat";
 
 export const chatRoutes = new Elysia({ prefix: "chats" })
   .use(authMacro)
@@ -19,6 +24,24 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
       query: z.object({
         limit: z.coerce.number().default(50),
         cursor: z.coerce.number().default(0),
+      }),
+    },
+  )
+  .get(
+    "/:chatId/data",
+    async ({ params: { chatId }, user, status }) => {
+      const result = await getChatData(user.id, chatId);
+      if (!result) {
+        return status(403, {
+          message: "Unauthorized",
+        });
+      }
+      return result;
+    },
+    {
+      auth: true,
+      params: z.object({
+        chatId: z.coerce.number(),
       }),
     },
   )

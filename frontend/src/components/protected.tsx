@@ -4,10 +4,10 @@ import React from "react";
 import { useNavigate } from "react-router";
 
 export default function Protected({ children }: PropsWithChildren) {
-  const user = useOptionalUser();
+  const { user, isPending } = useOptionalUser();
   const navigate = useNavigate();
   React.useEffect(() => {
-    if (!user) {
+    if (!user && !isPending) {
       navigate("/");
     }
   }, [user]);

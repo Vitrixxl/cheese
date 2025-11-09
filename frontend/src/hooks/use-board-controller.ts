@@ -20,8 +20,8 @@ export type BoardController = {
   selectSquare(square: Square | null): void;
   setHover(square: Square | null): void;
   availableMoves: Move[];
-  applyLocalMove(move: LocalMove): boolean;
-  loadFen(fen: string): boolean;
+  applyLocalMove(move: LocalMove | string): boolean;
+  loadFen(fen: string): void;
   setOutcome: (
     params: { winner: User["id"] | null; outcome: Outcome } | null,
   ) => void;
@@ -55,7 +55,7 @@ export function useBoardController(): BoardController {
   const bumpUiBoard = () => setUiVersion((v) => v + 1);
   const bumpBoard = () => setVersion((v) => v + 1);
 
-  const applyLocalMove = (move: LocalMove) => {
+  const applyLocalMove = (move: LocalMove | string) => {
     chess.move(move);
     uiChess.loadPgn(chess.pgn());
     setHistory(chess.history());
@@ -69,11 +69,12 @@ export function useBoardController(): BoardController {
 
   const loadFen = (fen: string) => {
     chess.load(fen);
+    uiChess.load(fen);
+    bumpUiBoard();
     bumpBoard();
     setSelected(null);
     setMoves([]);
     setHover(null);
-    return true;
   };
 
   const reset = () => {

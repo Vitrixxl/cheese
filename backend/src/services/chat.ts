@@ -1,12 +1,11 @@
 import {
-  chat,
   Chat,
   InsertMessage,
   message,
   usersToChats,
 } from "@backend/lib/db/schema";
 import { db } from "../lib/db";
-import { ChatWithUsersAndMessages, User } from "@shared";
+import { ChatData, ChatWithUsersAndMessages, User } from "@shared";
 
 export const isInChat = async (userId: User["id"], chatId: Chat["id"]) => {
   const result = await db.query.usersToChats.findFirst({
@@ -80,4 +79,27 @@ export const insertChatMessage = async (
   if (!canWrite) return false;
   await db.insert(message).values({ ...messagePayload, userId, chatId });
   return true;
+};
+
+export const getChatData = async (
+  userId: User["id"],
+  chatId: Chat["id"],
+): Promise<ChatData | null> => {
+  if (!(await isInChat(userId, chatId))) return null;
+  const chat = await db.query.chat.findFirst({
+    with: {
+      userLinks: {
+        with: {
+          user: true,
+        },
+      },
+    },
+    where: (chat, w) => w.eq(chat.id, chatId),
+  });
+  if (!chat) return null;
+  return {
+    id: chat.id,
+    name: chat.name,
+    users: chat.userLinks.map((ul) => ul.user),
+  };
 };

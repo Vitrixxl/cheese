@@ -1,5 +1,13 @@
-import { Group, Message, Game, Chat, Elo } from "@backend/lib/db/schema";
+import {
+  Group,
+  Message,
+  Game,
+  Chat,
+  Elo,
+  Puzzle,
+} from "@backend/lib/db/schema";
 import type { User } from "@backend/lib/auth";
+import type { Color } from "chess.js";
 export type { User } from "@backend/lib/auth";
 
 export type {
@@ -11,6 +19,10 @@ export type {
   FriendRequests,
   Puzzle,
 } from "@backend/lib/db/schema";
+
+export interface PuzzleWithColor extends Puzzle {
+  color: Color;
+}
 
 export interface GroupWithUsers extends Group {
   users: User[];
@@ -28,4 +40,8 @@ export interface GameWithUsers extends Omit<Game, "whiteId" | "blackId"> {
 export type ChatWithUsersAndMessages = Chat & {
   users: User[];
   messages: Message[];
+};
+
+export type ChatData = Chat & {
+  users: User[];
 };

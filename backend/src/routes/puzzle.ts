@@ -1,7 +1,7 @@
 import { db } from "@backend/lib/db";
-import { puzzle, user as userTable } from "@backend/lib/db/schema";
+import { user as userTable } from "@backend/lib/db/schema";
 import { authMacro } from "@backend/macros/auth";
-import { eq } from "drizzle-orm";
+import { Chess } from "chess.js";
 import Elysia from "elysia";
 import z from "zod";
 
@@ -12,43 +12,44 @@ export const puzzleRoutes = new Elysia({ prefix: "/puzzle" })
   .use(authMacro)
   .get(
     "/",
-    async ({ user }) => {
-      return db.select().from(puzzle).where(eq(puzzle.id, user.puzzleLevel));
+    async ({ user, status }) => {
+      console.log({ lvl: user.puzzleLevel });
+      const result = await db.query.puzzle.findFirst({
+        where: (puzzle, w) => w.eq(puzzle.id, user.puzzleLevel + 1),
+      });
+      if (!result) {
+        return status(404, {
+          message: "No puzzle found",
+        });
+      }
+      const chess = new Chess();
+      chess.load(result.fen);
+
+      return { ...result, color: chess.turn() };
     },
     { auth: true },
   )
   .post(
     "/solve",
-    async ({ user, body: { moves }, status }) => {
-      const result = await db
-        .select()
-        .from(puzzle)
-        .where(eq(puzzle.id, user.puzzleLevel));
-      if (!result || result.length == 0) {
-        return status(500, {
-          message: "Error while retrieving the puzzle",
-        });
-      }
-      const p = result[0];
-      if (p.moves != moves.join(" ")) {
-        return status(400, {
-          message: "Wrong solution, what are you trying to do buddy",
-        });
-      }
-
+    async ({ user, status }) => {
       await db.update(userTable).set({
         puzzleLevel: user.puzzleLevel + 1,
       });
 
-      return db
-        .select()
-        .from(puzzle)
-        .where(eq(puzzle.id, user.puzzleLevel + 1));
+      const result = await db.query.puzzle.findFirst({
+        where: (puzzle, w) => w.eq(puzzle.id, user.puzzleLevel + 2),
+      });
+      if (!result) {
+        return status(404, {
+          message: "puzzle not found",
+        });
+      }
+      const chess = new Chess();
+      chess.load(result.fen);
+
+      return { ...result, color: chess.turn() };
     },
     {
       auth: true,
-      body: z.object({
-        moves: z.array(z.string()),
-      }),
     },
   );

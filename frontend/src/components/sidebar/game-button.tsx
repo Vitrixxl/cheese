@@ -1,8 +1,14 @@
 import { GAME_TYPES, type GameType } from "@shared";
 import { Button } from "../ui/button";
 import React, { type ForwardRefExoticComponent } from "react";
-import type { LucideProps } from "lucide-react";
+import { LucideChevronLeft, type LucideProps } from "lucide-react";
 import { capitalize, cn } from "@/lib/utils";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
+import { SidebarMenuButton, SidebarMenuSubButton } from "../ui/sidebar";
 
 export type GameButtonProps = {
   gameType: keyof typeof GAME_TYPES;
@@ -18,34 +24,47 @@ export const GameButton = ({
   selected,
   ...props
 }: GameButtonProps) => {
+  const [isOpen, setIsOpen] = React.useState(false);
   const gameTypes = GAME_TYPES[gameType];
   return (
-    <div className="flex flex-col w-full gap-2">
-      <div className="flex gap-2 items-end">
-        <props.icon
-          className="size-8 fill-[]"
-          style={{
-            color: `var(--${gameType}-color)`,
-          }}
-        />
-        <h2 className="text-xl font-semibold">{capitalize(gameType)}</h2>
-      </div>
-      <div className="flex gap-2 w-full">
-        {gameTypes.map((g) => (
-          <Button
-            size="sm"
-            key={g}
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger asChild>
+        <SidebarMenuButton className="flex justify-between" variant="outline">
+          <div className="flex gap-2">
+            <props.icon
+              className="size-5"
+              style={{
+                color: `var(--${gameType}-color)`,
+              }}
+            />
+            <h2 className="font-semibold">{capitalize(gameType)}</h2>
+          </div>
+          <LucideChevronLeft
             className={cn(
-              "flex-1 !bg-background hover:!bg-accent",
-              selected == g && "text-foreground !bg-input/50",
+              "transition-transform size-4",
+              isOpen && "-rotate-90",
             )}
-            variant="outline"
-            onClick={() => onSelect(g)}
-          >
-            {g}
-          </Button>
-        ))}
-      </div>
-    </div>
+          />
+        </SidebarMenuButton>
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="flex  gap-1 w-full mt-1">
+          {gameTypes.map((g) => (
+            <SidebarMenuSubButton
+              size="sm"
+              key={g}
+              className={cn(
+                "!bg-background hover:!bg-accent justify-center font-semibold text-xs flex-1",
+                selected == g && "text-foreground !bg-input/50",
+              )}
+              onClick={() => onSelect(g)}
+              asChild
+            >
+              <button>{g}</button>
+            </SidebarMenuSubButton>
+          ))}
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };

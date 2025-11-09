@@ -6,7 +6,7 @@ import React from "react";
 import Promotion from "./promotion";
 import { useAtomValue } from "jotai";
 import { turnAtom } from "@/store";
-import { GameOutcomeDialog } from "./drived-board/game-outcome";
+import { LucideLoaderCircle } from "lucide-react";
 
 const fileLetters = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const rankNumbers = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -44,6 +44,7 @@ export type BoardProps = {
   hover: Square | null;
   selected: Square | null;
   playerColor: Color | null;
+  loading?: boolean;
   onSelect: (square: Square | null) => any;
   onHover: (square: Square | null) => any;
   onMove: (move: LocalMove) => any;
@@ -55,6 +56,7 @@ export default function Board({
   hover,
   selected,
   playerColor,
+  loading,
   onSelect,
   onHover,
   onMove,
@@ -130,6 +132,7 @@ export default function Board({
                 squareName={squareName}
                 rankIndex={rankIndex}
                 ranks={ranks}
+                playerColor={playerColor ? playerColor : "w"}
               />
             </div>
           );
@@ -168,6 +171,11 @@ export default function Board({
             />
           );
         }),
+      )}
+      {loading && (
+        <div className="absolute inset-0 bg-background/30 grid place-content-center">
+          <LucideLoaderCircle className="animate-spin size-14" />
+        </div>
       )}
     </div>
   );

@@ -56,14 +56,14 @@ export default function AppSidebar() {
           </SidebarMenuButton>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="space-y-0">
         {sessionData && (
           <>
             <GameSidebar />
             <SidebarGroup className="gap-2">
               {links.map(({ to, icon, label }) => (
                 <SidebarMenu>
-                  <SidebarMenuButton asChild className="text-lg gap-4 relative">
+                  <SidebarMenuButton asChild className="gap-4 relative">
                     <Link to={to}>
                       {icon}
                       {label}
