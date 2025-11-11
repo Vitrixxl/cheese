@@ -20,6 +20,7 @@ export class GameInstance {
     payload: ChessServerMessages[K],
   ) {
     const ws = this.game.users[userId].ws;
+    console.log({ ws, key, payload });
     if (!ws) return;
     ws.send(
       JSON.stringify({

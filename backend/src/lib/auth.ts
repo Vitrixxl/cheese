@@ -38,9 +38,14 @@ export const auth = betterAuth({
   },
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
-      console.log({ path: ctx.path });
       if (ctx.path.startsWith("/callback") && ctx.context.newSession) {
         const userId = ctx.context.newSession.user.id;
+        const exist = await db.query.elo.findFirst({
+          where: (elo, w) => w.eq(elo.userId, userId),
+        });
+
+        if (exist) return;
+
         await db.insert(schema.elo).values(
           Object.keys(GAME_TYPES).map((k) => ({
             userId,

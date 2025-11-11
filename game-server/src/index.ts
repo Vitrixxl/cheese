@@ -91,7 +91,6 @@ const app = new Elysia()
               emailVerified: z.boolean(),
               name: z.string(),
               image: z.string().nullable().optional(),
-              elo: z.number(),
               puzzleLevel: z.number(),
             }),
           )

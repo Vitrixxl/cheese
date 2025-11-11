@@ -1,0 +1,32 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": [
+    "src/renderer/src/env.d.ts",
+    "src/renderer/src/**/*",
+    "src/renderer/src/**/*.tsx",
+    "src/preload/*.d.ts",
+    "../shared/**/*.ts",
+    "../backend/src/**/*.ts",
+    "../game-server/src/**/*.ts"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/renderer/src/*"],
+      "@shared": ["../shared/index.ts"],
+      "@shared/*": ["../shared/*"],
+      "@backend": ["../backend/src"],
+      "@backend/*": ["../backend/src/*"],
+      "@game-server": ["../game-server/src"],
+      "@game-server/*": ["../game-server/src/*"]
+    }
+  }
+}

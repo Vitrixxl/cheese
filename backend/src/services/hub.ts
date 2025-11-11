@@ -1,4 +1,4 @@
-import { Challenge, tryCatchAsync, type GameType } from "@shared";
+import { Challenge, tryCatch, tryCatchAsync, type GameType } from "@shared";
 import type { User } from "../lib/auth";
 import { WsMessage, WsServerMessage } from "@backend/lib/types";
 import { ElysiaWS } from "elysia/ws";
@@ -31,20 +31,18 @@ export class MatchmakingService {
       players.forEach((player) => {
         if (!queue.has(player.id)) return;
 
-        let bestMatch: { user: User; diff: number } | null = null;
+        let bestMatch: { user: User } | null = null;
 
         for (const candidate of players) {
+          console.log({ values: this.queueMap.values() });
           if (candidate.id === player.id) continue;
           if (!queue.has(candidate.id)) continue;
-          const diff = Math.abs(player.elo - candidate.elo);
-          if (diff > MAX_ELO_DIFF) continue;
-          if (!bestMatch || bestMatch.diff > diff) {
-            bestMatch = { user: candidate, diff };
-          }
+          bestMatch = { user: candidate };
         }
 
+        console.log({ bestMatch });
         if (!bestMatch) return;
-        console.log("match");
+        console.log("matched");
         this.createGame({ gameType, users: [player, bestMatch.user] });
         queue.delete(player.id);
         queue.delete(bestMatch.user.id);
@@ -143,9 +141,12 @@ export class MatchmakingService {
     payload,
     user,
   }: WsMessage & { user: User }) => {
+    console.log({ key, payload, user });
     switch (key) {
       case "joinQueue": {
-        this.joinQueue({ user, ...payload });
+        const { data, error } = tryCatch(() =>
+          this.joinQueue({ user, ...payload }),
+        );
         break;
       }
       case "quitQueue": {
