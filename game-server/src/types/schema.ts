@@ -5,7 +5,7 @@ import { ServerGame } from "./game";
 
 export type ChessClientMessage = z.infer<typeof messageSchema>;
 export type ChessServerMessages = {
-  gameStatus: Pick<ServerGame, "gameType" | "timers" | "messages"> & {
+  gameStatus: Pick<ServerGame, "timeControl" | "timers" | "messages"> & {
     opponent: User;
   };
 

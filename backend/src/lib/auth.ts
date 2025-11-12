@@ -4,7 +4,7 @@ import { createAuthMiddleware } from "better-auth/api";
 import { betterAuth } from "better-auth";
 import * as schema from "./db/schema";
 import { db } from "./db";
-import { GAME_TYPES } from "@shared";
+import { GAME_TIME_CONTROLS } from "@shared";
 
 export const auth = betterAuth({
   baseURL: "http://localhost:6969",
@@ -47,9 +47,9 @@ export const auth = betterAuth({
         if (exist) return;
 
         await db.insert(schema.elo).values(
-          Object.keys(GAME_TYPES).map((k) => ({
+          Object.keys(GAME_TIME_CONTROLS).map((k) => ({
             userId,
-            gameType: k as keyof typeof GAME_TYPES,
+            category: k as keyof typeof GAME_TIME_CONTROLS,
             elo: 500,
           })),
         );

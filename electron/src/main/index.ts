@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { Stockfish } from '../stockfish'
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +52,38 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // Stockfish IPC handlers
+  const stockfish = new Stockfish()
+
+  ipcMain.handle('stockfish:evalFen', async (_event, fen: string) => {
+    try {
+      const result = await stockfish.evalFen(fen)
+      return result
+    } catch (error) {
+      console.error('Error evaluating FEN:', error)
+      return null
+    }
+  })
+
+  ipcMain.handle('stockfish:evalPgn', async (_event, pgn: string) => {
+    try {
+      const result = await stockfish.evalPgn(pgn)
+      return result
+    } catch (error) {
+      console.error('Error evaluating PGN:', error)
+      return null
+    }
+  })
+  ipcMain.handle('stockfish:evalPgnChill', async (_event, pgn: string) => {
+    try {
+      const result = await stockfish.evalPgnChill(pgn)
+      return result
+    } catch (error) {
+      console.error('Error evaluating PGN:', error)
+      return null
+    }
+  })
 
   createWindow()
 

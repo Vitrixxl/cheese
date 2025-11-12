@@ -1,19 +1,19 @@
 import { isInQueueAtom } from "@/store";
 import { hubWsAtom } from "@/store/ws";
 import type { WsMessage } from "@backend";
-import type { GameType } from "@shared";
+import type { GameTimeControl } from "@shared";
 import { useAtom, useAtomValue } from "jotai";
 
 export const useQueue = () => {
   const ws = useAtomValue(hubWsAtom);
   const [isInQueue, setIsInQueue] = useAtom(isInQueueAtom);
 
-  const enterQueue = (gameType: GameType) => {
+  const enterQueue = (timeControl: GameTimeControl) => {
     if (!ws) return;
     ws.send({
       key: "joinQueue",
       payload: {
-        gameType,
+        timeControl,
       },
     } satisfies WsMessage);
     setIsInQueue(true);

@@ -8,7 +8,6 @@ import { api } from "./lib/api";
 export class GameInstance {
   game: ServerGame;
   timerInterval: ReturnType<typeof setInterval> | null = null;
-  timers: Record<Color, number> | null = null;
   constructor(game: ServerGame) {
     this.game = game;
     this;
@@ -40,7 +39,7 @@ export class GameInstance {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-    const result = await api.game.save.post({
+    await api.game.save.post({
       gameId: this.game.id,
       outcome,
       winner,
@@ -53,6 +52,13 @@ export class GameInstance {
     });
   };
 
+  private incrementTimer = () => {
+    if (this.game.chess.turn() == "w") {
+      this.game.timers.b += this.game.timerIncrement;
+      return;
+    }
+    this.game.timers.w += this.game.timerIncrement;
+  };
   private startTimers = () => {
     let lastTick = 0;
 
@@ -94,7 +100,7 @@ export class GameInstance {
     this.send("gameStatus", userId, {
       timers: this.game.timers,
       messages: this.game.messages,
-      gameType: this.game.gameType,
+      timeControl: this.game.timeControl,
       opponent: this.game.users[opponentId],
     });
   };
@@ -117,6 +123,7 @@ export class GameInstance {
           console.error(error);
           return;
         }
+        this.incrementTimer();
 
         this.send("move", opponentId, {
           move: payload.move,

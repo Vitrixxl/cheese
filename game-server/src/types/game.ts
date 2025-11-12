@@ -1,4 +1,4 @@
-import { GameType, User } from "@shared";
+import { GameTimeControl, User } from "@shared";
 import { Chess, Color } from "chess.js";
 import { ElysiaWS } from "elysia/ws";
 
@@ -13,10 +13,11 @@ export type ServerGame = {
   id: string;
   users: Record<User["id"], WithOptionalWS<WithColor<User>>>;
   opponentByUserId: Record<User["id"], User["id"]>;
-  gameType: GameType;
+  timeControl: GameTimeControl;
   chess: Chess;
   drawOffer: User["id"] | null;
   timers: Record<Color, number>;
+  timerIncrement: number;
   messages: {
     userId: User["id"];
     content: string;

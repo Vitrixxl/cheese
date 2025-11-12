@@ -19,7 +19,7 @@ export const getProfileByUserId = async (
   const result = await db.query.user.findFirst({
     with: {
       elos: {
-        columns: { elo: true, gameType: true },
+        columns: { elo: true, category: true },
       },
       games: {
         limit: 5,

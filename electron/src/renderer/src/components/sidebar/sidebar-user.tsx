@@ -7,10 +7,7 @@ export const SidebarUser = () => {
   return (
     <SidebarMenu>
       {data ? (
-        <SidebarMenuButton
-          className="text-muted-foreground hover:text-foreground"
-          variant="outline"
-        >
+        <SidebarMenuButton className="text-muted-foreground hover:text-foreground">
           <UserAvatar url={data.user.image} name={data.user.name} size="sm" />
           <span className="line-clamp-1 text-ellipsis">{data.user.name}</span>
         </SidebarMenuButton>

@@ -1,6 +1,5 @@
 import Elysia from "elysia";
 import { auth } from "../lib/auth";
-import { socketinator } from "@backend/lib/socket";
 
 export const authMacro = new Elysia().macro({
   auth: {
@@ -13,11 +12,6 @@ export const authMacro = new Elysia().macro({
           message: "Unauthorized",
         });
       }
-      socketinator.setSession({
-        userId: session.user.id,
-        token: session.session.token,
-        exp: session.session.expiresAt.getTime(),
-      });
       return {
         user: session.user,
         session: session.session,

@@ -1,4 +1,4 @@
-import { GAME_TYPES, type GameType } from "@shared";
+import { GAME_TIME_CONTROLS, type GameTimeControl } from "@shared";
 import { Button } from "../ui/button";
 import React, { type ForwardRefExoticComponent } from "react";
 import { LucideChevronLeft, type LucideProps } from "lucide-react";
@@ -11,21 +11,21 @@ import {
 import { SidebarMenuButton, SidebarMenuSubButton } from "../ui/sidebar";
 
 export type GameButtonProps = {
-  gameType: keyof typeof GAME_TYPES;
+  category: keyof typeof GAME_TIME_CONTROLS;
   icon: ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
   >;
-  selected: GameType | null;
-  onSelect: (gameType: GameType) => void;
+  selected: GameTimeControl | null;
+  onSelect: (timeControl: GameTimeControl) => void;
 };
 export const GameButton = ({
-  gameType,
+  category,
   onSelect,
   selected,
   ...props
 }: GameButtonProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const gameTypes = GAME_TYPES[gameType];
+  const timeControls = GAME_TIME_CONTROLS[category];
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <CollapsibleTrigger asChild>
@@ -34,10 +34,10 @@ export const GameButton = ({
             <props.icon
               className="size-5"
               style={{
-                color: `var(--${gameType}-color)`,
+                color: `var(--${category}-color)`,
               }}
             />
-            <h2 className="font-semibold">{capitalize(gameType)}</h2>
+            <h2 className="font-semibold">{capitalize(category)}</h2>
           </div>
           <LucideChevronLeft
             className={cn(
@@ -49,18 +49,18 @@ export const GameButton = ({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="flex  gap-1 w-full mt-1">
-          {gameTypes.map((g) => (
+          {timeControls.map((tc) => (
             <SidebarMenuSubButton
               size="sm"
-              key={g}
+              key={tc}
               className={cn(
                 "!bg-background hover:!bg-accent justify-center font-semibold text-xs flex-1",
-                selected == g && "text-foreground !bg-input/50",
+                selected == tc && "text-foreground !bg-input/50",
               )}
-              onClick={() => onSelect(g)}
+              onClick={() => onSelect(tc)}
               asChild
             >
-              <button>{g}</button>
+              <button>{tc}</button>
             </SidebarMenuSubButton>
           ))}
         </div>

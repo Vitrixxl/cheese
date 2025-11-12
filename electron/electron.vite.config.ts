@@ -7,7 +7,7 @@ const projectRoot = resolve('.')
 const rendererRoot = resolve('src/renderer')
 const rendererSrcRoot = resolve('src/renderer/src')
 const rendererPublicRoot = resolve('src/renderer/public')
-const sharedRoot = resolve('../shared')
+const sharedRoot = resolve('../shared/src')
 const backendRoot = resolve('../backend/src')
 const gameServerRoot = resolve('../game-server/src')
 

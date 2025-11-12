@@ -1,8 +1,6 @@
 import Board from '@/components/board'
-import { useBoardDriver } from '@/hooks/use-board-driver'
-import { colorAtom, initialTimerAtom, playersAtom } from '@/store'
+import { colorAtom, gameCategoryAtom, initialTimerAtom, playersAtom } from '@/store'
 import {
-  boardAtom,
   hintMovesAtom,
   hoverSquareAtom,
   selectedSquareAtom,
@@ -16,6 +14,8 @@ import { BoardHistory } from '../board-history'
 import type { LocalMove } from '@/types'
 import { useBoardController } from '@/hooks/use-board-controller'
 import Protected from '../protected'
+import BoardContainer from '../board-container'
+import { TIME_CONTROL_INCREMENTS } from '@shared'
 import EndGameDialog from './game/end-game-dialog'
 
 export default function GameDrivenBoard() {
@@ -29,6 +29,7 @@ export default function GameDrivenBoard() {
   const moves = useAtomValue(hintMovesAtom)
   const hover = useAtomValue(hoverSquareAtom)
   const selected = useAtomValue(selectedSquareAtom)
+  const gameCategory = useAtomValue(gameCategoryAtom)
   const handleMove = (move: LocalMove) => {
     if (!ws) return
     ws.send({
@@ -42,29 +43,41 @@ export default function GameDrivenBoard() {
   if (!ws || players.length != 2) return
   return (
     <Protected>
-      <div className="grid-rows-[auto_1fr] h-full gap-4 grid xl:grid-cols-[auto_1fr] xl:grid-rows-1">
-        <div className="grid-rows-[0fr_auto_0fr] gap-4 grid max-h-full h-fit">
-          <div className="flex justify-between w-full">
-            <Timer initialTimer={initialTimer} color={color == 'w' ? 'b' : 'w'} />
-          </div>
+      <BoardContainer
+        board={
+          <div className="grid h-fit max-h-full max-w-full min-w-0 grid-cols-1 grid-rows-[0fr_auto_0fr] gap-4">
+            <div className="flex w-full justify-between">
+              <Timer
+                initialTimer={initialTimer}
+                color={color == 'w' ? 'b' : 'w'}
+                increment={
+                  gameCategory?.timeControl ? TIME_CONTROL_INCREMENTS[gameCategory.timeControl] : 0
+                }
+              />
+            </div>
 
-          <Board
-            board={board}
-            moves={moves}
-            hover={hover}
-            selected={selected}
-            playerColor={color || 'w'}
-            onMove={handleMove}
-            onSelect={selectSquare}
-            onHover={setHover}
-          />
-          <Timer initialTimer={initialTimer} color={color == 'w' ? 'w' : 'b'} />
-        </div>
-        <div className="w-full h-fit justify-self-start">
-          <BoardHistory />
-        </div>
-        <EndGameDialog />
-      </div>
+            <Board
+              board={board}
+              moves={moves}
+              hover={hover}
+              selected={selected}
+              playerColor={color || 'w'}
+              onMove={handleMove}
+              onSelect={selectSquare}
+              onHover={setHover}
+            />
+            <Timer
+              initialTimer={initialTimer}
+              color={color == 'w' ? 'w' : 'b'}
+              increment={
+                gameCategory?.timeControl ? TIME_CONTROL_INCREMENTS[gameCategory.timeControl] : 0
+              }
+            />
+          </div>
+        }
+        sideBoard={<BoardHistory />}
+      />
+      <EndGameDialog />
     </Protected>
   )
 }

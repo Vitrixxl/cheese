@@ -1,5 +1,5 @@
 import { SidebarGroup, SidebarMenu, SidebarMenuItem } from "../ui/sidebar";
-import { GAME_TYPES, type GameType } from "@shared";
+import { GAME_TIME_CONTROLS, type GameTimeControl } from "@shared";
 import { Zap, Flame, Timer, Hourglass, LucideX } from "lucide-react";
 import { GameButton } from "./game-button";
 import { useQueue } from "@/hooks/use-queue";
@@ -14,18 +14,18 @@ export const gameIconMap = {
 } as const;
 export default function GameSidebar() {
   const { enterQueue, isInQueue, leaveQueue } = useQueue();
-  const [selected, setSelected] = React.useState<GameType | null>(null);
+  const [selected, setSelected] = React.useState<GameTimeControl | null>(null);
   return (
     <SidebarGroup>
       <SidebarMenu className="flex flex-col gap-4">
-        {Object.entries(GAME_TYPES).map(([k]) => (
+        {Object.entries(GAME_TIME_CONTROLS).map(([k]) => (
           <GameButton
             key={k}
-            gameType={k as keyof typeof GAME_TYPES}
-            icon={gameIconMap[k as keyof typeof GAME_TYPES]}
+            category={k as keyof typeof GAME_TIME_CONTROLS}
+            icon={gameIconMap[k as keyof typeof GAME_TIME_CONTROLS]}
             selected={selected}
-            onSelect={(g) =>
-              selected == g ? setSelected(null) : setSelected(g)
+            onSelect={(tc) =>
+              selected == tc ? setSelected(null) : setSelected(tc)
             }
           />
         ))}

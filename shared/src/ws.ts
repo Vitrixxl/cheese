@@ -1,4 +1,4 @@
-import { User } from "@shared/entity";
+import { User } from "./entity";
 import { count } from "console";
 import { ElysiaWS } from "elysia/ws";
 

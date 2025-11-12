@@ -3,8 +3,9 @@ import {
   LucideCrown,
   LucideGraduationCap,
   LucidePuzzle,
-  LucideUsers,
-} from "lucide-react";
+  LucideTrophy,
+  LucideUsers
+} from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -12,38 +13,43 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-} from "../ui/sidebar";
-import GameSidebar from "./game-sidebar";
-import { SidebarUser } from "./sidebar-user";
-import { auth } from "@/lib/auth";
-import { Link } from "react-router";
+  SidebarMenuButton
+} from '../ui/sidebar'
+import GameSidebar from './game-sidebar'
+import { SidebarUser } from './sidebar-user'
+import { auth } from '@/lib/auth'
+import { Link } from 'react-router'
 
 const links = [
   {
+    icon: <LucideTrophy className="text-yellow-500" />,
+    label: 'Tournaments',
+    to: '/tournaments'
+  },
+  {
     icon: <LucidePuzzle className="text-green-500" />,
-    label: "Puzzles",
-    to: "/puzzles",
+    label: 'Puzzles',
+    to: '/puzzles'
   },
   {
     icon: <LucideChartNetwork className="text-violet-500" />,
-    label: "Analysis",
-    to: "/analysis",
+    label: 'Analysis',
+    to: '/analysis'
   },
   {
     icon: <LucideGraduationCap className="text-blue-500" />,
-    label: "Lessons",
-    to: "/lessons",
+    label: 'Lessons',
+    to: '/lessons'
   },
   {
     icon: <LucideUsers />,
-    label: "Social",
-    to: "social",
-  },
-];
+    label: 'Social',
+    to: 'social'
+  }
+]
 
 export default function AppSidebar() {
-  const { data: sessionData } = auth.useSession();
+  const { data: sessionData } = auth.useSession()
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
@@ -62,8 +68,8 @@ export default function AppSidebar() {
             <GameSidebar />
             <SidebarGroup className="gap-2">
               {links.map(({ to, icon, label }) => (
-                <SidebarMenu>
-                  <SidebarMenuButton asChild className="gap-4 relative">
+                <SidebarMenu key={to}>
+                  <SidebarMenuButton asChild className="relative gap-4">
                     <Link to={to}>
                       {icon}
                       {label}
@@ -79,5 +85,5 @@ export default function AppSidebar() {
         <SidebarUser />
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

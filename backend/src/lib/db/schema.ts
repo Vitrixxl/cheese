@@ -6,7 +6,7 @@ import {
   index,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
-import { GAME_TYPES, GameType, Outcome } from "@shared";
+import { GAME_TIME_CONTROLS, GameTimeControl, Outcome } from "@shared";
 import { relations } from "drizzle-orm";
 
 export const user = sqliteTable("user", {
@@ -86,8 +86,8 @@ export const verification = sqliteTable("verification", {
 
 export const game = sqliteTable("game", {
   id: text().primaryKey(),
-  gameType: text().notNull().$type<keyof typeof GAME_TYPES>(),
-  exactGameType: text().notNull().$type<GameType>(),
+  category: text().notNull().$type<keyof typeof GAME_TIME_CONTROLS>(),
+  timeControl: text().notNull().$type<GameTimeControl>(),
   whiteId: text()
     .references(() => user.id)
     .notNull(),
@@ -217,10 +217,10 @@ export const elo = sqliteTable(
     userId: text()
       .references(() => user.id)
       .notNull(),
-    gameType: text().notNull().$type<keyof typeof GAME_TYPES>(),
+    category: text().notNull().$type<keyof typeof GAME_TIME_CONTROLS>(),
     elo: integer().notNull().default(500),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.gameType] })],
+  (t) => [primaryKey({ columns: [t.userId, t.category] })],
 );
 
 export const usersToGames = sqliteTable("users_to_games", {
@@ -230,6 +230,11 @@ export const usersToGames = sqliteTable("users_to_games", {
   gameId: text()
     .references(() => game.id)
     .notNull(),
+});
+
+export const analysis = sqliteTable("analysis", {
+  id: integer().primaryKey({ autoIncrement: true }),
+  gameId: text().references(() => game.id),
 });
 
 // RELATIONS

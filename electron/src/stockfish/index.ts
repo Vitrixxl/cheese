@@ -1,8 +1,8 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
 
-type EvalScore = { type: 'cp'; value: number } | { type: 'mate'; value: number }
+export type EvalScore = { type: 'cp'; value: number } | { type: 'mate'; value: number }
 
-type EvalOutput = {
+export type EvalOutput = {
   bestMove: string
   sequence: string[]
   eval: EvalScore
@@ -137,20 +137,36 @@ export class Stockfish {
 
     return result
   }
-}
+  evalPgnChill = async (pgn: string): Promise<(EvalOutput | null)[] | null> => {
+    const parsedPgn = this.parsePgn(pgn)
+    const result: (EvalOutput | null)[] = []
+    for (let i = 0; i <= parsedPgn.length; i += 5) {
+      const slicesResult = await Promise.all(
+        Array.from({ length: 5 }).map(async (_, i) => {
+          const slice = parsedPgn.slice(1, Math.max(i, 1))
 
-const stockfish = new Stockfish()
-const result = await stockfish.evalFen(
-  'r1bqkbnr/pppppppp/n7/8/8/5N2/PPPPPPPP/RNBQKB1R w KQkq - 2 2'
-)
-console.log(result)
-const pgn = `1.e4 e5 2.Nf3 Nc6 3.Bb5 {This opening is called the Ruy Lopez.} 3...a6
-4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3 d6 8.c3 O-O 9.h3 Nb8 10.d4 Nbd7
-11.c4 c6 12.cxb5 axb5 13.Nc3 Bb7 14.Bg5 b4 15.Nb1 h6 16.Bh4 c5 17.dxe5
-Nxe4 18.Bxe7 Qxe7 19.exd6 Qf6 20.Nbd2 Nxd6 21.Nc4 Nxc4 22.Bxc4 Nb6
-23.Ne5 Rae8 24.Bxf7+ Rxf7 25.Nxf7 Rxe1+ 26.Qxe1 Kxf7 27.Qe3 Qg5 28.Qxg5
-hxg5 29.b3 Ke6 30.a3 Kd6 31.axb4 cxb4 32.Ra5 Nd5 33.f3 Bc8 34.Kf2 Bf5
-35.Ra7 g6 36.Ra6+ Kc5 37.Ke1 Nf4 38.g3 Nxh3 39.Kd2 Kb5 40.Rd6 Kc5 41.Ra6
-Nf2 42.g4 Bd3`
-const a = await stockfish.evalPgn(pgn)
-console.log(a)
+          const engine = this.getEngine()
+          this.send(engine, `position startpos moves ${slice.flat().join(' ')}`)
+          const linesPromise = this.readOutput(engine, /^bestmove\s+(\S+)(?:\s+ponder\s+(\S+))?/)
+          this.send(engine, `go depth 10`)
+          const lines = await linesPromise
+          engine.kill()
+          if (lines.length <= 2) return null
+          const lastLine = lines[lines.length - 1]
+          const lastInfoLine = lines[lines.length - 2]
+          const parsedInfo = this.parseInfo(lastInfoLine)
+          if (!parsedInfo) return null
+          return {
+            bestMove: lastLine.split(' ')[1],
+            sequence: parsedInfo.pv.split(' '),
+            eval: parsedInfo.score
+          }
+        })
+      )
+      slicesResult.forEach((r) => {
+        slicesResult.push(r)
+      })
+    }
+    return result
+  }
+}

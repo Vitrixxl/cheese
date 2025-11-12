@@ -1,4 +1,9 @@
-import { Challenge, tryCatch, tryCatchAsync, type GameType } from "@shared";
+import {
+  Challenge,
+  tryCatch,
+  tryCatchAsync,
+  type GameTimeControl,
+} from "@shared";
 import type { User } from "../lib/auth";
 import { WsMessage, WsServerMessage } from "@backend/lib/types";
 import { ElysiaWS } from "elysia/ws";
@@ -15,7 +20,7 @@ export const matchmakingServiceMessageKeys = [
 ];
 
 export class MatchmakingService {
-  private readonly queueMap = new Map<GameType, Map<User["id"], User>>();
+  private readonly queueMap = new Map<GameTimeControl, Map<User["id"], User>>();
   private readonly userWsMap: Record<User["id"], ElysiaWS[]> = {};
   private readonly challenges: Record<string, Challenge> = {};
 
@@ -26,7 +31,7 @@ export class MatchmakingService {
   constructor() {}
 
   private matchPlayers() {
-    this.queueMap.forEach((queue, gameType) => {
+    this.queueMap.forEach((queue, timeControl) => {
       const players = Array.from(queue.values());
       players.forEach((player) => {
         if (!queue.has(player.id)) return;
@@ -34,41 +39,50 @@ export class MatchmakingService {
         let bestMatch: { user: User } | null = null;
 
         for (const candidate of players) {
-          console.log({ values: this.queueMap.values() });
           if (candidate.id === player.id) continue;
           if (!queue.has(candidate.id)) continue;
           bestMatch = { user: candidate };
         }
 
-        console.log({ bestMatch });
         if (!bestMatch) return;
-        console.log("matched");
-        this.createGame({ gameType, users: [player, bestMatch.user] });
+        this.createGame({ timeControl, users: [player, bestMatch.user] });
         queue.delete(player.id);
         queue.delete(bestMatch.user.id);
       });
     });
   }
 
-  private joinQueue({ user, gameType }: { user: User; gameType: GameType }) {
-    let queue = this.queueMap.get(gameType);
+  private joinQueue({
+    user,
+    timeControl,
+  }: {
+    user: User;
+    timeControl: GameTimeControl;
+  }) {
+    let queue = this.queueMap.get(timeControl);
     if (!queue) {
       queue = new Map<User["id"], User>();
-      this.queueMap.set(gameType, queue);
+      this.queueMap.set(timeControl, queue);
     }
     queue.set(user.id, user);
     this.matchPlayers();
   }
 
-  private createChallenge = ({ id, gameType, from, to, ranked }: Challenge) => {
-    this.challenges[id] = { id, gameType, from, to, ranked };
+  private createChallenge = ({
+    id,
+    timeControl,
+    from,
+    to,
+    ranked,
+  }: Challenge) => {
+    this.challenges[id] = { id, timeControl, from, to, ranked };
     const outgoingChallenges = this.outgoingChallenges[from.id] || new Set();
     outgoingChallenges.add(id);
     this.outgoingChallenges[from.id] = outgoingChallenges;
     const incomingChallenges = this.incomingChallenges[to.id] || new Set();
     incomingChallenges.add(id);
     this.incomingChallenges[to.id] = incomingChallenges;
-    this.send("challenge", to.id, { id, gameType, from, to, ranked });
+    this.send("challenge", to.id, { id, timeControl, from, to, ranked });
   };
 
   private cancelChallenge = ({ id }: { id: string }) => {
@@ -84,17 +98,16 @@ export class MatchmakingService {
   };
 
   private createGame = async ({
-    gameType,
+    timeControl,
     users,
   }: {
-    gameType: GameType;
+    timeControl: GameTimeControl;
     users: User[];
   }) => {
     const { data, error } = await gameServerApi["create-game"].post({
-      gameType: gameType,
+      timeControl: timeControl,
       users: users,
     });
-    console.log({ data });
     if (error) {
       console.error(error);
       return;
@@ -102,8 +115,7 @@ export class MatchmakingService {
     for (const user of users) {
       this.send("game", user.id, {
         users: data.users,
-        gameType,
-        initialTimer: data.initialTimer,
+        timeControl,
         newGameId: data.newGameId,
       });
     }
@@ -141,7 +153,6 @@ export class MatchmakingService {
     payload,
     user,
   }: WsMessage & { user: User }) => {
-    console.log({ key, payload, user });
     switch (key) {
       case "joinQueue": {
         const { data, error } = tryCatch(() =>
@@ -159,7 +170,7 @@ export class MatchmakingService {
           return;
         }
         this.createChallenge({
-          gameType: payload.gameType,
+          timeControl: payload.timeControl,
           id: payload.id,
           ranked: payload.ranked,
           to: data[0],
@@ -181,7 +192,7 @@ export class MatchmakingService {
           return;
         }
         this.createGame({
-          gameType: currentChallenge.gameType,
+          timeControl: currentChallenge.timeControl,
           users: [currentChallenge.from, currentChallenge.to],
         });
       }

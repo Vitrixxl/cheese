@@ -12,8 +12,8 @@
       "@game-server/*": ["./game-server/src/*"],
       "@backend": ["./backend/src"],
       "@backend/*": ["./backend/src/*"],
-      "@shared": ["./shared/index.ts"],
-      "@shared/*": ["./shared/*"],
+      "@shared": ["./shared/src/index.ts"],
+      "@shared/*": ["./shared/src/*"],
       "@/*": ["./frontend/src/*"]
     }
   }

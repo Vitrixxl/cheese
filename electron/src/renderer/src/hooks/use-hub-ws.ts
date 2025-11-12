@@ -2,6 +2,7 @@ import { chessChallengesAtom } from '@/store/chess-challenges'
 import {
   colorAtom,
   currentDriverAtom,
+  gameCategoryAtom,
   gameIdAtom,
   initialTimerAtom,
   isInQueueAtom,
@@ -12,7 +13,7 @@ import type { WsServerMessageWithKey } from '@backend'
 import React from 'react'
 import { useAtom } from 'jotai'
 import { hubWsAtom } from '@/store/ws'
-import { tryCatch } from '@shared'
+import { INITIALS_TIMERS, TIME_CONTROL_TO_CATEGORY, tryCatch } from '@shared'
 import { api } from '@/lib/api'
 import { auth } from '@/lib/auth'
 import { useNavigate } from 'react-router'
@@ -21,7 +22,6 @@ export default function useHubWs() {
   const [ws, setWs] = useAtom(hubWsAtom)
   const { data: authData } = auth.useSession()
   const handleClose = () => {
-    console.log('close')
     setWs(null)
   }
   const navigate = useNavigate()
@@ -33,11 +33,16 @@ export default function useHubWs() {
 
     switch (key) {
       case 'game': {
+        const initialTimer = INITIALS_TIMERS[payload.timeControl]
+        store.set(gameCategoryAtom, {
+          timeControl: payload.timeControl,
+          category: TIME_CONTROL_TO_CATEGORY[payload.timeControl]
+        })
         store.set(gameIdAtom, payload.newGameId)
         store.set(currentDriverAtom, 'online')
         store.set(isInQueueAtom, false)
         store.set(colorAtom, payload.users.find((u) => u.id == user.id)?.color || null)
-        store.set(initialTimerAtom, payload.initialTimer)
+        store.set(initialTimerAtom, initialTimer)
         store.set(playersAtom, payload.users)
         navigate('/')
         break

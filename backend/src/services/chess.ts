@@ -1,6 +1,6 @@
 import { Chess, Color } from "chess.js";
 import { socketinator } from "../lib/socket";
-import type { GameType, Outcome } from "@shared";
+import type { GameTimeControl, Outcome } from "@shared";
 import type { User } from "../lib/auth";
 
 export type ChessGameMessage = {
@@ -29,7 +29,7 @@ export const gamesMap = new Map<string, ChessGame>();
 const timerIntervals = new Map<string, ReturnType<typeof setInterval>>();
 
 // All timer values are stored in milliseconds.
-export const INITIALS_TIMERS: Record<GameType, number> = {
+export const INITIALS_TIMERS: Record<GameTimeControl, number> = {
   "1 min": 60_000,
   "1 | 1": 60_000,
   "2 | 1": 120_000,
@@ -51,12 +51,12 @@ export const setColors = (users: User[]): Player[] => {
 
 export const startGame = (
   users: User[],
-  gameType: GameType,
+  timeControl: GameTimeControl,
   competitive: boolean,
 ) => {
   const players = setColors(users);
   const gameId = Bun.randomUUIDv7();
-  const initialTimer = INITIALS_TIMERS[gameType];
+  const initialTimer = INITIALS_TIMERS[timeControl];
   if (!initialTimer) return;
   const chessGame: ChessGame = {
     id: gameId,

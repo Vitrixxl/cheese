@@ -1,7 +1,13 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import z from "zod";
-import { GAME_TYPES, GameType, INITIALS_TIMERS, User } from "@shared";
+import {
+  GAME_TIME_CONTROLS,
+  GameTimeControl,
+  INITIALS_TIMERS,
+  TIME_CONTROL_INCREMENTS,
+  User,
+} from "@shared";
 import { Chess, Color } from "chess.js";
 import { GameInstance } from "./engine";
 import { messageSchema } from "./schema";
@@ -13,8 +19,8 @@ const getColor = (): Color => {
   return Math.random() > 0.5 ? "w" : "b";
 };
 
-const getInitialTimer = (gameType: GameType) => {
-  return INITIALS_TIMERS[gameType];
+const getInitialTimer = (timeControl: GameTimeControl) => {
+  return INITIALS_TIMERS[timeControl];
 };
 
 const app = new Elysia()
@@ -25,11 +31,12 @@ const app = new Elysia()
   )
   .post(
     "/create-game",
-    ({ body: { gameType, users } }) => {
+    ({ body: { timeControl, users } }) => {
+      console.log({ timeControl });
       const [user1, user2] = users;
       const color = getColor();
       const newGameId = Bun.randomUUIDv7();
-      const initialTimer = getInitialTimer(gameType);
+      const initialTimer = getInitialTimer(timeControl);
       const completUsers: Record<string, WithOptionalWS<WithColor<User>>> = {
         [user1.id]: { ...user1, color, ws: null },
         [user2.id]: {
@@ -42,7 +49,7 @@ const app = new Elysia()
         newGameId,
         new GameInstance({
           id: newGameId,
-          gameType,
+          timeControl,
           users: {
             [user1.id]: { ...user1, color, ws: null },
             [user2.id]: {
@@ -59,6 +66,13 @@ const app = new Elysia()
             b: initialTimer,
             w: initialTimer,
           },
+          timerIncrement: Object.keys(TIME_CONTROL_INCREMENTS).includes(
+            timeControl,
+          )
+            ? TIME_CONTROL_INCREMENTS[
+                timeControl as keyof typeof TIME_CONTROL_INCREMENTS
+              ]
+            : 0,
           chess: new Chess(),
           drawOffer: null,
           messages: [],
@@ -76,8 +90,8 @@ const app = new Elysia()
     },
     {
       body: z.object({
-        gameType: z.literal(
-          Object.entries(GAME_TYPES)
+        timeControl: z.literal(
+          Object.entries(GAME_TIME_CONTROLS)
             .map(([_, k]) => k)
             .flat(),
         ),

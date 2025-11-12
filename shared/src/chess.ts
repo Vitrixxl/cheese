@@ -1,4 +1,4 @@
-import { GAME_TYPES } from "./constants";
+import { GAME_TIME_CONTROLS } from "./constants";
 import type { Chess, Color } from "chess.js";
 import type { OUTCOMES, User } from ".";
 
@@ -24,13 +24,14 @@ export type ChessGame = {
   winner: Color | null;
 };
 
-export type GameType = (typeof GAME_TYPES)[keyof typeof GAME_TYPES][number];
+export type GameCategory = keyof typeof GAME_TIME_CONTROLS;
+export type GameTimeControl = (typeof GAME_TIME_CONTROLS)[GameCategory][number];
 
 export type Player = User & {
   color: Color;
 };
 
-export const INITIALS_TIMERS: Record<GameType, number> = {
+export const INITIALS_TIMERS: Record<GameTimeControl, number> = {
   "1 min": 5_000,
   "1 | 1": 60_000,
   "2 | 1": 120_000,
@@ -53,6 +54,6 @@ export type Challenge = {
   id: string;
   from: User;
   to: User;
-  gameType: GameType;
+  timeControl: GameTimeControl;
   ranked: boolean;
 };

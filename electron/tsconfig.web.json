@@ -5,7 +5,7 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts",
-    "../shared/**/*.ts",
+    "../shared/src/**/*.ts",
     "../backend/src/**/*.ts",
     "../game-server/src/**/*.ts"
   ],
@@ -21,8 +21,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/renderer/src/*"],
-      "@shared": ["../shared/index.ts"],
-      "@shared/*": ["../shared/*"],
+      "@shared": ["../shared/src/index.ts"],
+      "@shared/*": ["../shared/src/*"],
       "@backend": ["../backend/src"],
       "@backend/*": ["../backend/src/*"],
       "@game-server": ["../game-server/src"],

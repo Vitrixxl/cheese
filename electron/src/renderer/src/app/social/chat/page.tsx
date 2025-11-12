@@ -1,94 +1,75 @@
-import TextareaAutosize from "react-textarea-autosize";
-import { List } from "@/components/list";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-} from "@/components/ui/input-group";
-import {
-  useChatData,
-  useChatMessages,
-  useSendChatMessage,
-} from "@/hooks/use-chats";
-import { LucideSend } from "lucide-react";
-import { useNavigate, useParams } from "react-router";
-import React from "react";
-import { ChatMessage } from "@/components/message";
-import { useUser } from "@/hooks/use-user";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { chat } from "@backend/lib/db/schema";
-import { UserAvatar } from "@/components/user-avatar";
-import { cn } from "@/lib/utils";
+import TextareaAutosize from 'react-textarea-autosize'
+import { List } from '@/components/list'
+import { InputGroup, InputGroupAddon, InputGroupButton } from '@/components/ui/input-group'
+import { useChatData, useChatMessages, useSendChatMessage } from '@/hooks/use-chats'
+import { LucideSend } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router'
+import React from 'react'
+import { ChatMessage } from '@/components/message'
+import { useUser } from '@/hooks/use-user'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { UserAvatar } from '@/components/user-avatar'
+import { cn } from '@/lib/utils'
 
 export default function ChatPage() {
-  const { chatId } = useParams();
-  const user = useUser();
-  const navigate = useNavigate();
-  const { data, isLoading, error } = useChatMessages(Number(chatId));
-  const { mutate } = useSendChatMessage(Number(chatId));
-  const [value, setValue] = React.useState("");
+  const { chatId } = useParams()
+  const user = useUser()
+  const navigate = useNavigate()
+  const { data, isLoading, error } = useChatMessages(Number(chatId))
+  const { mutate } = useSendChatMessage(Number(chatId))
+  const [value, setValue] = React.useState('')
   if (!chatId) {
-    console.error("NO CHAT ID");
-    navigate("/");
-    return;
+    console.error('NO CHAT ID')
+    navigate('/')
+    return
   }
 
   const handleSubmit = () => {
-    mutate({ content: value });
-  };
+    mutate({ content: value })
+  }
 
-  const { data: chatData } = useChatData(Number(chatId));
-  if (!data || !chatData) return null;
+  const { data: chatData } = useChatData(Number(chatId))
+  if (!data || !chatData) return null
 
   return (
-    <div className="border rounded-lg grid grid-rows-[auto_minmax(0,1fr)_auto] max-w-lg w-full bg-card grid-cols-1">
-      <div className="px-4 py-2 w-full border-b flex gap-2 items-center">
+    <div className="bg-card grid w-full max-w-lg grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] rounded-lg border">
+      <div className="flex w-full items-center gap-2 border-b px-4 py-2">
         <div className="flex">
           {chatData.users.slice(1, 4).map((u, i) => (
-            <UserAvatar
-              url={u.image}
-              name={u.name}
-              className={cn(i % 2 != 0 && "-ml-4")}
-            />
+            <UserAvatar url={u.image} name={u.name} className={cn(i % 2 != 0 && '-ml-4')} />
           ))}
         </div>
         <h3 className="font-semibold">
-          {chatData.name ||
-            chatData.users.find((u) => u.id != user.id)?.name ||
-            "No name (never)"}
+          {chatData.name || chatData.users.find((u) => u.id != user.id)?.name || 'No name (never)'}
         </h3>
       </div>
       <ScrollArea className="">
-        <div className="p-4 h-full w-full space-y-2 py-4">
+        <div className="h-full w-full space-y-2 p-4 py-4">
           {data.pages.map((p) =>
             p.messages.map((m) => (
-              <ChatMessage
-                user={user}
-                message={m}
-                isOwn={m.userId == user.id}
-              />
-            )),
+              <ChatMessage user={user} message={m} isOwn={m.userId == user.id} />
+            ))
           )}
         </div>
       </ScrollArea>
       <form
         className="px-4 pb-4"
         onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
+          e.preventDefault()
+          handleSubmit()
         }}
       >
         <InputGroup>
           <TextareaAutosize
             data-slot="input-group-control"
-            className="flex field-sizing-content min-h-8 w-full resize-none rounded-md bg-transparent px-3 py-2.5 text-base transition-[color,box-shadow] outline-none md:text-sm placeholder:text-muted-foreground"
+            className="placeholder:text-muted-foreground flex field-sizing-content min-h-8 w-full resize-none rounded-md bg-transparent px-3 py-2.5 text-base transition-[color,box-shadow] outline-none md:text-sm"
             placeholder="Write your message..."
             value={value}
             onChange={(e) => setValue(e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit();
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSubmit()
               }
             }}
           />
@@ -106,5 +87,5 @@ export default function ChatPage() {
         </InputGroup>
       </form>
     </div>
-  );
+  )
 }

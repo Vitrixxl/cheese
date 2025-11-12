@@ -1,12 +1,12 @@
-import { GAME_TYPES } from "@shared";
+import { GAME_TIME_CONTROLS } from "@shared";
 import z from "zod";
 
 export const wsMessageSchema = z.union([
   z.object({
     key: z.literal("joinQueue"),
     payload: z.object({
-      gameType: z.literal(
-        Object.entries(GAME_TYPES)
+      timeControl: z.literal(
+        Object.entries(GAME_TIME_CONTROLS)
           .map(([_, k]) => k)
           .flat(),
       ),
@@ -21,8 +21,8 @@ export const wsMessageSchema = z.union([
     payload: z.object({
       id: z.string(),
       ranked: z.boolean(),
-      gameType: z.literal(
-        Object.entries(GAME_TYPES)
+      timeControl: z.literal(
+        Object.entries(GAME_TIME_CONTROLS)
           .map(([_, k]) => k)
           .flat(),
       ),
