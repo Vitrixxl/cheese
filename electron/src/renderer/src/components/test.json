@@ -1,0 +1,48 @@
+[
+  {
+    "index": 1,
+    "whiteMove": {
+      "move": "d3"
+    },
+    "whiteBranches": [
+      [
+        {
+          "index": 1,
+          "whiteMove": {
+            "move": "g1f3"
+          },
+          "whiteBranches": [],
+          "blackMove": {
+            "move": "b8c6"
+          },
+          "blackBranches": []
+        }
+      ]
+    ],
+    "blackMove": {
+      "move": "e5",
+      "eval": {
+        "bestMove": "g1f3",
+        "evalScore": {
+          "type": "cp",
+          "value": 20
+        }
+      }
+    },
+    "blackBranches": [
+      [
+        {
+          "index": 3,
+          "whiteMove": {
+            "move": "g1f3"
+          },
+          "whiteBranches": [],
+          "blackMove": {
+            "move": "e2e4"
+          },
+          "blackBranches": []
+        }
+      ]
+    ]
+  }
+]

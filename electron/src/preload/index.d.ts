@@ -1,14 +1,14 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import type { BetterGameTree } from '@shared'
 import type { EvalOutput } from '../stockfish/main'
+import type { GameTree } from '@/hooks/use-game-tree'
 
 declare global {
   interface Window {
     electron: ElectronAPI
     api: {
       stockfish: {
-        evalFen: (fen: string) => Promise<EvalOutput | null>
-        evalPgn: (pgn: string) => Promise<(EvalOutput | null)[] | null>
-        evalPgnChill: (pgn: string) => Promise<(EvalOutput | null)[] | null>
+        evalGame: (game: string[]) => Promise<BetterGameTree | null>
       }
     }
   }

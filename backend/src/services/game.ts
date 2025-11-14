@@ -9,17 +9,14 @@ const white = alias(user, "whiteUser");
 const black = alias(user, "blackUser");
 
 export const getGame = async ({ gameId }: { gameId: Game["id"] }) => {
-  const results = await db
-    .select({
-      ...exclude(getTableColumns(game), ["blackId", "whiteId"]),
-      whiteUser: white,
-      blackUser: black,
-    })
-    .from(game)
-    .innerJoin(black, eq(black.id, game.blackId))
-    .innerJoin(white, eq(white.id, game.whiteId))
-    .where(eq(game.id, gameId));
-  return results;
+  const result = await db.query.game.findFirst({
+    with: {
+      black: true,
+      white: true,
+    },
+    where: (game, w) => w.eq(game.id, gameId),
+  });
+  return result;
 };
 
 export const getUserGames = async ({
@@ -31,29 +28,24 @@ export const getUserGames = async ({
   limit: number;
   cursor: number;
 }) => {
-  const results = await db
-    .select({
-      ...exclude(getTableColumns(game), ["blackId", "whiteId"]),
-      whiteUser: white,
-      blackUser: black,
-    })
-    .from(game)
-    .innerJoin(black, eq(black.id, game.blackId))
-    .innerJoin(white, eq(white.id, game.whiteId))
-    .where(or(eq(game.blackId, userId), eq(game.whiteId, userId)))
-    .orderBy(game.createdAt)
-    .limit(limit)
-    .offset(cursor + 1);
-
-  if (!results || results.length == 0) {
-    return {
-      games: [],
-      nextCursor: null,
-    };
-  }
-
-  return {
-    games: results,
-    nextCursor: results.length > limit ? cursor + limit : null,
-  };
+  const results = await db.query.game.findMany({
+    with: {
+      white: {
+        with: {
+          elos: true,
+        },
+      },
+      black: {
+        with: {
+          elos: true,
+        },
+      },
+    },
+    where: (game, w) =>
+      w.or(w.eq(game.blackId, userId), w.eq(game.whiteId, userId)),
+    orderBy: (game) => game.createdAt,
+    limit: limit + 1,
+    offset: cursor,
+  });
+  return results;
 };

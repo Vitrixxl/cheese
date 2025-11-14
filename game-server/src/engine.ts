@@ -39,10 +39,12 @@ export class GameInstance {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-    await api.game.save.post({
+    const result = await api.game.save.post({
       gameId: this.game.id,
+      pgn: this.game.chess.pgn(),
       outcome,
       winner,
+      timeControl: this.game.timeControl,
       users: Object.entries(this.game.users).map(([userId, user]) => ({
         userId,
         color: user.color,
@@ -50,6 +52,7 @@ export class GameInstance {
       messages: this.game.messages,
       timers: this.game.timers,
     });
+    console.log({ result });
   };
 
   private incrementTimer = () => {

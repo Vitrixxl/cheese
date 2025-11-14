@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "748072ab-d819-4cfe-ab48-814f6735243f",
-  "prevId": "89375fc0-db0a-4e8e-866a-aa29b4840fff",
+  "id": "1e95fffa-32a5-4536-a6fd-2585d9b04d16",
+  "prevId": "9cba7f0f-0507-474a-93d0-b90d75550770",
   "tables": {
     "account": {
       "name": "account",
@@ -119,6 +119,44 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "analysis": {
+      "name": "analysis",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "gameId": {
+          "name": "gameId",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "analysis_gameId_game_id_fk": {
+          "name": "analysis_gameId_game_id_fk",
+          "tableFrom": "analysis",
+          "tableTo": "game",
+          "columnsFrom": [
+            "gameId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "chat": {
       "name": "chat",
       "columns": {
@@ -153,8 +191,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "gameType": {
-          "name": "gameType",
+        "category": {
+          "name": "category",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -186,12 +224,12 @@
         }
       },
       "compositePrimaryKeys": {
-        "elo_userId_gameType_pk": {
+        "elo_userId_category_pk": {
           "columns": [
             "userId",
-            "gameType"
+            "category"
           ],
-          "name": "elo_userId_gameType_pk"
+          "name": "elo_userId_category_pk"
         }
       },
       "uniqueConstraints": {},
@@ -272,6 +310,20 @@
           "notNull": true,
           "autoincrement": false
         },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "timeControl": {
+          "name": "timeControl",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "whiteId": {
           "name": "whiteId",
           "type": "text",
@@ -310,21 +362,14 @@
         },
         "whiteTimer": {
           "name": "whiteTimer",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "blackTimer": {
           "name": "blackTimer",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "moves": {
-          "name": "moves",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -533,7 +578,7 @@
         },
         "gameId": {
           "name": "gameId",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -783,6 +828,13 @@
         },
         "image": {
           "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "bio": {
+          "name": "bio",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

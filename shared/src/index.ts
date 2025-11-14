@@ -4,3 +4,4 @@ export * from "./constants";
 export * from "./api";
 export * from "./utils";
 export * from "./ws";
+export * from "./analysis/types";

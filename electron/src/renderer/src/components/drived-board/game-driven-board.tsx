@@ -1,11 +1,5 @@
 import Board from '@/components/board'
 import { colorAtom, gameCategoryAtom, initialTimerAtom, playersAtom } from '@/store'
-import {
-  hintMovesAtom,
-  hoverSquareAtom,
-  selectedSquareAtom,
-  uiChessBoardAtom
-} from '@/store/chess-board'
 import { gameWsAtom } from '@/store/ws'
 import type { ChessClientMessage } from '@game-server/types/schema'
 import { useAtomValue } from 'jotai'
@@ -25,10 +19,6 @@ export default function GameDrivenBoard() {
   const players = useAtomValue(playersAtom)
   const { applyLocalMove, selectSquare, setHover } = useBoardController()
 
-  const board = useAtomValue(uiChessBoardAtom)
-  const moves = useAtomValue(hintMovesAtom)
-  const hover = useAtomValue(hoverSquareAtom)
-  const selected = useAtomValue(selectedSquareAtom)
   const gameCategory = useAtomValue(gameCategoryAtom)
   const handleMove = (move: LocalMove) => {
     if (!ws) return
@@ -57,10 +47,6 @@ export default function GameDrivenBoard() {
             </div>
 
             <Board
-              board={board}
-              moves={moves}
-              hover={hover}
-              selected={selected}
               playerColor={color || 'w'}
               onMove={handleMove}
               onSelect={selectSquare}

@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "9cba7f0f-0507-474a-93d0-b90d75550770",
-  "prevId": "ef4b5a51-8fd6-46f8-aa6c-c070d817b5d5",
+  "id": "0ad5f9f9-56dc-46a8-a384-99e11c81f7f0",
+  "prevId": "1e95fffa-32a5-4536-a6fd-2585d9b04d16",
   "tables": {
     "account": {
       "name": "account",
@@ -310,6 +310,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "pgn": {
+          "name": "pgn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "category": {
           "name": "category",
           "type": "text",
@@ -362,14 +369,14 @@
         },
         "whiteTimer": {
           "name": "whiteTimer",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "blackTimer": {
           "name": "blackTimer",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

@@ -4,6 +4,7 @@ import {
   integer,
   primaryKey,
   index,
+  real,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
 import { GAME_TIME_CONTROLS, GameTimeControl, Outcome } from "@shared";
@@ -17,6 +18,7 @@ export const user = sqliteTable("user", {
     .default(false)
     .notNull(),
   image: text("image"),
+  bio: text(),
   puzzleLevel: integer().notNull().default(1),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .$defaultFn(() => new Date())
@@ -86,6 +88,7 @@ export const verification = sqliteTable("verification", {
 
 export const game = sqliteTable("game", {
   id: text().primaryKey(),
+  pgn: text().notNull(),
   category: text().notNull().$type<keyof typeof GAME_TIME_CONTROLS>(),
   timeControl: text().notNull().$type<GameTimeControl>(),
   whiteId: text()
@@ -99,10 +102,11 @@ export const game = sqliteTable("game", {
   messages: text({ mode: "json" })
     .default([])
     .$type<{ userId: string; content: string }[]>(),
-  whiteTimer: integer().notNull(),
-  blackTimer: integer().notNull(),
-  moves: integer().notNull(),
-  createdAt: integer({ mode: "timestamp_ms" }).$defaultFn(() => new Date()),
+  whiteTimer: real().notNull(),
+  blackTimer: real().notNull(),
+  createdAt: integer({ mode: "timestamp_ms" })
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 export const move = sqliteTable("move", {

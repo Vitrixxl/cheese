@@ -56,31 +56,12 @@ app.whenReady().then(() => {
   // Stockfish IPC handlers
   const stockfish = new Stockfish()
 
-  ipcMain.handle('stockfish:evalFen', async (_event, fen: string) => {
+  ipcMain.handle('stockfish:evalGame', async (_event, moves: string[]) => {
     try {
-      const result = await stockfish.evalFen(fen)
+      const result = await stockfish.evalGame(moves)
       return result
     } catch (error) {
-      console.error('Error evaluating FEN:', error)
-      return null
-    }
-  })
-
-  ipcMain.handle('stockfish:evalPgn', async (_event, pgn: string) => {
-    try {
-      const result = await stockfish.evalPgn(pgn)
-      return result
-    } catch (error) {
-      console.error('Error evaluating PGN:', error)
-      return null
-    }
-  })
-  ipcMain.handle('stockfish:evalPgnChill', async (_event, pgn: string) => {
-    try {
-      const result = await stockfish.evalPgnChill(pgn)
-      return result
-    } catch (error) {
-      console.error('Error evaluating PGN:', error)
+      console.error('Error evaluating the game:', error)
       return null
     }
   })

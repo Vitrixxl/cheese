@@ -32,7 +32,7 @@ export interface MessageWithGame extends Message {
   game?: Game;
 }
 
-export interface GameWithUsers extends Omit<Game, "whiteId" | "blackId"> {
+export interface GameWithUsers extends Game {
   white: User & { elos: Elo[] };
   black: User & { elos: Elo[] };
 }

@@ -1,18 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
+import type { BetterGameTree } from '@shared'
 import { electronAPI } from '@electron-toolkit/preload'
-import type { EvalOutput } from '../stockfish/main'
-
+//
 // Custom APIs for renderer
 const api = {
   stockfish: {
-    evalFen: (fen: string): Promise<EvalOutput | null> => {
-      return ipcRenderer.invoke('stockfish:evalFen', fen)
-    },
-    evalPgn: (pgn: string): Promise<(EvalOutput | null)[] | null> => {
-      return ipcRenderer.invoke('stockfish:evalPgn', pgn)
-    },
-    evalPgnChill: (pgn: string): Promise<(EvalOutput | null)[] | null> => {
-      return ipcRenderer.invoke('stockfish:evalPgnChill', pgn)
+    evalGame: (moves: string[]): Promise<BetterGameTree | null> => {
+      return ipcRenderer.invoke('stockfish:evalGame', moves)
     }
   }
 }

@@ -1,17 +1,83 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process'
+import { Chess } from 'chess.js'
+import { exit } from 'node:process'
+type MoveQuality =
+  | 'brilliant' // !!
+  | 'great' // !
+  | 'best' // Meilleur coup
+  | 'excellent'
+  | 'good'
+  | 'book' // Coup théorique
+  | 'inaccuracy' // ?!
+  | 'mistake' // ?
+  | 'blunder' // ??
+  | 'missed-win' // Victoire manquée
+
+export type GameTree = {
+  move: string | null
+  isMain: boolean
+  eval?: {
+    bestMove: string
+    moveQuality: MoveQuality
+    evalScore: EvalScore
+  }
+  variations: GameTree[]
+  index: number
+}
 
 export type EvalScore = { type: 'cp'; value: number } | { type: 'mate'; value: number }
-
-export type EvalOutput = {
-  bestMove: string
-  sequence: string[]
-  eval: EvalScore
-}
 
 export class Stockfish {
   private readonly stockfishPath = '/usr/sbin/stockfish'
   constructor() {}
 
+  private getMoveQuality = (
+    prevEval: Pick<EvalOutput, 'evaluation'>['evaluation'],
+    currentNode: EvalOutput,
+    moves: string[]
+  ): MoveQuality | null => {
+    if (!currentNode.move) return null
+    const chess = new Chess()
+    moves.forEach((m) => chess.move(m))
+    const move = chess.move(currentNode.move)
+
+    const uciMove = `${move.from}${move.to}${move.promotion}`
+    const isSacrifice = chess.moves().includes(move.san)
+    if (isSacrifice && currentNode.bestMoves.includes(uciMove)) {
+      return 'brilliant'
+    }
+    if (isSacrifice && !currentNode.bestMoves.includes(uciMove)) {
+      return 'blunder'
+    }
+    if (prevEval.mate && !currentNode.evaluation.mate) {
+      return 'blunder'
+    }
+    if (!prevEval.mate && currentNode.evaluation.mate) {
+      return 'great'
+    }
+    if (currentNode.bestMoves[0] == uciMove) {
+      return 'best'
+    }
+    if (prevEval.mate && currentNode.evaluation.mate) {
+      const diff = Math.abs(currentNode.evaluation.mate) - Math.abs(prevEval.mate)
+      if (diff >= 0) {
+        return 'good'
+      }
+      return 'great'
+    }
+    if (!prevEval.cp || !currentNode.evaluation.cp) return null
+    const diff = Math.abs(currentNode.evaluation.cp) - Math.abs(prevEval.cp)
+    if (diff > 0) {
+      return 'good'
+    }
+    if (diff < 20) {
+      return 'inaccuracy'
+    }
+    if (diff < 30) {
+      return 'mistake'
+    }
+    return 'blunder'
+  }
   private readOutput = (
     proc: ChildProcessWithoutNullStreams,
     delimiter: RegExp
@@ -31,142 +97,149 @@ export class Stockfish {
     })
   }
 
-  private parseInfo = (line: string) => {
-    if (!line.startsWith('info ')) return null
-    const parts = line.trim().split(/\s+/)
-    const out: { depth: number | null; score: EvalScore | null; pv: string | null } = {
-      depth: null,
-      score: null,
-      pv: null
-    }
-
-    for (let i = 0; i < parts.length; i++) {
-      const tok = parts[i]
-      if (tok === 'depth' && i + 1 < parts.length) out.depth = Number(parts[++i])
-      else if (tok === 'score' && i + 2 < parts.length) {
-        const type = parts[++i] as 'cp' | 'mate'
-        const value = Number(parts[++i])
-        out.score = { type, value }
-      } else if (tok === 'pv') {
-        out.pv = parts.slice(i + 1).join(' ')
-        break
-      }
-    }
-    if (out.depth == null || out.score == null || out.pv == null) return null
-    return out as { depth: number; score: EvalScore; pv: string }
-  }
-
   private getEngine = () => {
     const engine = spawn(this.stockfishPath, [], { stdio: 'pipe' })
     this.send(engine, 'uci')
     return engine
   }
+
   private send = (engine: ChildProcessWithoutNullStreams, cmd: string) => {
     engine.stdin.write(cmd + '\n')
   }
 
-  parsePgn = (pgn: string) => {
-    const cleaned = pgn
-      .replace(/\{[^}]*\}/g, ' ')
-      .replace(/\b\d+\.(?:\.\.)?/g, ' ')
-      .replace(/\b1-0\b|\b0-1\b|\b1\/2-1\/2\b|\*/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-    const moves: string[][] = []
-    const rawMoves = cleaned.split(' ')
-
-    for (let i = 0; i < rawMoves.length; i += 2) {
-      moves.push([rawMoves[i], rawMoves[i + 1]])
-    }
-    return moves
+  private naturalToUci = (moves: string[]) => {
+    const chess = new Chess()
+    const uciMoves: string[] = []
+    moves.forEach((m) => {
+      const result = chess.move(m)
+      if (result) {
+        uciMoves.push(result.from + result.to + (result.promotion || ''))
+      }
+    })
+    return uciMoves
   }
-  toPgn = (parsedPgn: string[][]) => {
-    let pgnStr = ''
-    let i = 1
-    for (const moves of parsedPgn) {
-      pgnStr += ` ${i}.`
-      moves.forEach((m) => {
-        if (!m) return
-        pgnStr += `${m} `
-      })
-      i++
-    }
-    return pgnStr
-  }
+  private parseStockfishOutput = (lines: string[], multiPv: number): Omit<EvalOutput, 'move'> => {
+    const infoLines = lines.slice(lines.length - 1 - multiPv, lines.length - 1)
+    const bestMoves: string[] = []
+    const nextVariations: string[][] = []
+    let cpScore = 0
+    let mateScore: number | null = null
 
-  evalFen = async (fen: string): Promise<EvalOutput | null> => {
-    const engine = this.getEngine()
-    this.send(engine, `position fen ${fen}`)
-    const linesPromise = this.readOutput(engine, /^bestmove\s+(\S+)(?:\s+ponder\s+(\S+))?/)
-    this.send(engine, `go movetime 500`)
-    const lines = await linesPromise
-    if (lines.length <= 2) return null
-    const lastLine = lines[lines.length - 1]
-    const lastInfoLine = lines[lines.length - 2]
-    const parsedInfo = this.parseInfo(lastInfoLine)
-    if (!parsedInfo) return null
+    infoLines.forEach((l) => {
+      const splitedLine = l.split(' ')
+      const scoreTypeIndex = splitedLine.indexOf('score') + 1
+      const scoreIndex = splitedLine.indexOf('score') + 2
+      const bestMoveIndex = splitedLine.indexOf('pv') + 1
+      bestMoves.push(splitedLine[bestMoveIndex])
+      nextVariations.push(splitedLine.slice(bestMoveIndex, l.length))
+      const scoreType = splitedLine[scoreTypeIndex]
+      const score = Number(splitedLine[scoreIndex])
+      if (scoreType == 'mate') {
+        mateScore = Number(score)
+        return
+      }
+      if (Math.abs(score) > Math.abs(cpScore)) {
+        cpScore = score
+      }
+    })
+
     return {
-      bestMove: lastLine.split(' ')[1],
-      sequence: parsedInfo!.pv!.split(' '),
-      eval: parsedInfo.score
+      bestMoves,
+      evaluation: {
+        mate: mateScore,
+        cp: cpScore
+      },
+      nextVariations
     }
   }
-  evalPgn = async (pgn: string): Promise<(EvalOutput | null)[] | null> => {
-    const parsedPgn = this.parsePgn(pgn)
-    const result = await Promise.all(
-      Array.from({ length: parsedPgn.length }).map(async (_, i) => {
-        const slice = parsedPgn.slice(1, Math.max(i, 1))
 
-        const engine = this.getEngine()
-        this.send(engine, `position startpos moves ${slice.flat().join(' ')}`)
-        const linesPromise = this.readOutput(engine, /^bestmove\s+(\S+)(?:\s+ponder\s+(\S+))?/)
-        this.send(engine, `go depth 10`)
-        const lines = await linesPromise
-        if (lines.length <= 2) return null
-        const lastLine = lines[lines.length - 1]
-        const lastInfoLine = lines[lines.length - 2]
-        const parsedInfo = this.parseInfo(lastInfoLine)
-        if (!parsedInfo) return null
-        return {
-          bestMove: lastLine.split(' ')[1],
-          sequence: parsedInfo.pv.split(' '),
-          eval: parsedInfo.score
-        }
-      })
-    )
-
-    return result
+  /**
+   * This method take a UCI string array
+   */
+  private evalPosition = async (moves: string[]) => {
+    const engine = this.getEngine()
+    this.send(engine, `setoption name MultiPv value 1`)
+    this.send(engine, `position startpos moves ${moves.join(' ')}`)
+    const linesPromise = this.readOutput(engine, /^bestmove\s+(\S+)(?:\s+ponder\s+(\S+))?/)
+    this.send(engine, `go depth 10`)
+    const lines = await linesPromise
+    return this.parseStockfishOutput(lines, 1)
   }
-  evalPgnChill = async (pgn: string): Promise<(EvalOutput | null)[] | null> => {
-    const parsedPgn = this.parsePgn(pgn)
-    const result: (EvalOutput | null)[] = []
-    for (let i = 0; i <= parsedPgn.length; i += 5) {
-      const slicesResult = await Promise.all(
-        Array.from({ length: 5 }).map(async (_, i) => {
-          const slice = parsedPgn.slice(1, Math.max(i, 1))
 
-          const engine = this.getEngine()
-          this.send(engine, `position startpos moves ${slice.flat().join(' ')}`)
-          const linesPromise = this.readOutput(engine, /^bestmove\s+(\S+)(?:\s+ponder\s+(\S+))?/)
-          this.send(engine, `go depth 10`)
-          const lines = await linesPromise
-          engine.kill()
-          if (lines.length <= 2) return null
-          const lastLine = lines[lines.length - 1]
-          const lastInfoLine = lines[lines.length - 2]
-          const parsedInfo = this.parseInfo(lastInfoLine)
-          if (!parsedInfo) return null
-          return {
-            bestMove: lastLine.split(' ')[1],
-            sequence: parsedInfo.pv.split(' '),
-            eval: parsedInfo.score
-          }
-        })
-      )
-      slicesResult.forEach((r) => {
-        slicesResult.push(r)
-      })
+  private buildComputedBranch = (computedVariation: string[]): BetterGameTree => {
+    const restVariation = computedVariation.slice(1)
+    return {
+      move: computedVariation[0],
+      nextVariation: restVariation.length == 0 ? [] : [this.buildComputedBranch(restVariation)],
+      isMain: false
     }
-    return result
   }
+  private buildTree = (evals: EvalOutput[]): BetterGameTree => {
+    const firstNode = evals[0]
+    const root: BetterGameTree = {
+      move: null,
+      nextVariation: [],
+      evaluation: firstNode.evaluation,
+      bestMoves: firstNode.bestMoves,
+      isMain: true
+    }
+    let current = root
+
+    const movesList: string[] = []
+    for (const e of evals.slice(1)) {
+      const nodeVariations: BetterGameTree[] = []
+      console.log({ move: e.move })
+      for (const variation of e.nextVariations) {
+        nodeVariations.push(this.buildComputedBranch(variation))
+      }
+      const newNode: BetterGameTree = {
+        move: e.move,
+        evaluation: e.evaluation,
+        bestMoves: e.bestMoves,
+        moveQuality: current.evaluation
+          ? this.getMoveQuality(current.evaluation, e, movesList)
+          : null,
+        nextVariation: nodeVariations,
+        isMain: true
+      }
+      current.nextVariation = [newNode, ...current.nextVariation]
+      current = newNode
+      if (newNode.move) {
+        movesList.push(newNode.move)
+      }
+    }
+
+    return root
+  }
+  evalGame = async (moves: string[]) => {
+    const evals: EvalOutput[] = []
+    for (let i = 0; i <= moves.length; i++) {
+      const movesSlice = moves.slice(0, i)
+      console.log({ movesSlice })
+      const parsedMoves = this.naturalToUci(movesSlice)
+      const evalResult = await this.evalPosition(parsedMoves)
+      const moveForNode = moves[i - 1]
+      evals.push({ ...evalResult, move: moveForNode })
+    }
+
+    const gameTree = this.buildTree(evals)
+    console.log(JSON.stringify(gameTree, null, 2))
+
+    return gameTree
+  }
+}
+
+type BetterGameTree = {
+  move: string | null
+  bestMoves?: string[]
+  moveQuality?: MoveQuality | null
+  evaluation?: { cp?: number | null; mate?: number | null }
+  nextVariation: BetterGameTree[]
+  isMain: boolean
+}
+type EvalOutput = {
+  move: string | null
+  bestMoves: string[]
+  evaluation: { cp?: number | null; mate?: number | null }
+  nextVariations: string[][]
 }

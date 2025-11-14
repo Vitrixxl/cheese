@@ -4,7 +4,6 @@ import { WindowsProvider } from '@/components/window'
 import useGameWs from '@/hooks/use-game-ws'
 import useHubWs from '@/hooks/use-hub-ws'
 import QueryProvider from '@/providers/query-provider'
-import React from 'react'
 import { Outlet } from 'react-router'
 
 export default function AppLayout() {
@@ -17,7 +16,7 @@ export default function AppLayout() {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset className="max-h-full overflow-hidden">
-            <div className="h-full max-h-full overflow-hidden p-4 flex-1 w-full">
+            <div className="h-full max-h-full w-full flex-1 overflow-hidden p-4">
               <Outlet />
             </div>
           </SidebarInset>

@@ -34,7 +34,7 @@ const links = [
   {
     icon: <LucideChartNetwork className="text-violet-500" />,
     label: 'Analysis',
-    to: '/analysis'
+    to: '/games'
   },
   {
     icon: <LucideGraduationCap className="text-blue-500" />,

@@ -15,8 +15,23 @@ CREATE TABLE `account` (
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
+CREATE TABLE `analysis` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`gameId` text,
+	FOREIGN KEY (`gameId`) REFERENCES `game`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
 CREATE TABLE `chat` (
-	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`name` text
+);
+--> statement-breakpoint
+CREATE TABLE `elo` (
+	`userId` text NOT NULL,
+	`category` text NOT NULL,
+	`elo` integer DEFAULT 500 NOT NULL,
+	PRIMARY KEY(`userId`, `category`),
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `friend_request` (
@@ -30,6 +45,8 @@ CREATE TABLE `friend_request` (
 --> statement-breakpoint
 CREATE TABLE `game` (
 	`id` text PRIMARY KEY NOT NULL,
+	`category` text NOT NULL,
+	`timeControl` text NOT NULL,
 	`whiteId` text NOT NULL,
 	`blackId` text NOT NULL,
 	`outcome` text NOT NULL,
@@ -65,7 +82,7 @@ CREATE TABLE `message` (
 	`userId` text NOT NULL,
 	`chatId` integer NOT NULL,
 	`content` text,
-	`gameId` integer,
+	`gameId` text,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`chatId`) REFERENCES `chat`(`id`) ON UPDATE no action ON DELETE no action,
@@ -104,7 +121,6 @@ CREATE TABLE `user` (
 	`email` text NOT NULL,
 	`email_verified` integer DEFAULT false NOT NULL,
 	`image` text,
-	`elo` integer DEFAULT 500 NOT NULL,
 	`puzzleLevel` integer DEFAULT 1 NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL
@@ -116,6 +132,13 @@ CREATE TABLE `users_to_chats` (
 	`chat_id` integer NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`chat_id`) REFERENCES `chat`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `users_to_games` (
+	`userId` text NOT NULL,
+	`gameId` text NOT NULL,
+	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`gameId`) REFERENCES `game`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `group_user` (
