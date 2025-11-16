@@ -1,4 +1,5 @@
 import type { Board, DriverType } from '@/types'
+import type { GameTree } from '@shared'
 import { Chess, type Color, type Move, type Square } from 'chess.js'
 import { atom } from 'jotai'
 
@@ -25,6 +26,9 @@ export const historyIndexAtom = atom<number>((get) => {
   get(uiBoardVersionAtom)
   return get(uiChessAtom).history().length
 })
+
+export const gameTreeAtom = atom<GameTree>([])
+export const uiMovesPathKeyAtom = atom<string>('')
 export const passedMovesAtom = atom<Move[]>([])
 
 /**

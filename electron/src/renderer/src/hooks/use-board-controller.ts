@@ -8,27 +8,28 @@ import {
   passedMovesAtom,
   selectedSquareAtom,
   uiBoardVersionAtom,
-  uiChessAtom
+  uiChessAtom,
+  uiMovesPathKeyAtom,
 } from '@/store/chess-board'
 import type { LocalMove } from '@/types/chess'
 import type { Outcome, User } from '@shared'
-import type { Chess, Move, Square } from 'chess.js'
+import { Chess, type Move, type Square } from 'chess.js'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 
-export type BoardController = {
-  chess: Chess
-  selectSquare(square: Square | null): void
-  setHover(square: Square | null): void
-  availableMoves: Move[]
-  applyLocalMove(move: LocalMove | string): boolean
-  loadFen(fen: string): void
-  setOutcome: (params: { winner: User['id'] | null; outcome: Outcome } | null) => void
-  reset(): void
-  undo(): void
-  redo(): void
-}
+// export type BoardController = {
+//   chess: Chess
+//   selectSquare(square: Square | null): void
+//   setHover(square: Square | null): void
+//   availableMoves: Move[]
+//   applyLocalMove(move: LocalMove | string): boolean
+//   loadFen(fen: string): void
+//   setOutcome: (params: { winner: User['id'] | null; outcome: Outcome } | null) => void
+//   reset(): void
+//   undo(): void
+//   redo(): void
+// }
 
-export function useBoardController(): BoardController {
+export function useBoardController() {
   const chess = useAtomValue(chessAtom)
   const uiChess = useAtomValue(uiChessAtom)
   const setSelected = useSetAtom(selectedSquareAtom)
@@ -38,6 +39,7 @@ export function useBoardController(): BoardController {
   const setHover = useSetAtom(hoverSquareAtom)
   const setHistory = useSetAtom(chessHistoryAtom)
   const setOutcome = useSetAtom(outcomeAtom)
+  const setUiMovesPathKey = useSetAtom(uiMovesPathKeyAtom)
   const [passedMoves, setPassedMoves] = useAtom(passedMovesAtom)
 
   const selectSquare = (square: Square | null) => {
@@ -65,6 +67,15 @@ export function useBoardController(): BoardController {
     return true
   }
 
+  const setMovesPath = (moves: string[]) => {
+    const localChess = new Chess()
+    for (const move of moves) {
+      localChess.move(move)
+    }
+    uiChess.load(localChess.fen())
+    bumpUiBoard()
+  }
+
   const loadFen = (fen: string) => {
     chess.load(fen)
     uiChess.load(fen)
@@ -83,6 +94,12 @@ export function useBoardController(): BoardController {
     setSelected(null)
     setMoves([])
     setHover(null)
+  }
+
+  const resyncUi = () => {
+    uiChess.load(chess.fen())
+    setUiMovesPathKey('')
+    bumpUiBoard()
   }
 
   const undo = () => {
@@ -105,13 +122,16 @@ export function useBoardController(): BoardController {
     selectSquare,
     setHover,
     availableMoves: chess.moves({
-      verbose: true
+      verbose: true,
     }),
     applyLocalMove,
     loadFen,
     reset,
     redo,
     undo,
-    setOutcome
+    setOutcome,
+    setMovesPath,
+    setUiMovesPathKey,
+    resyncUi,
   }
 }

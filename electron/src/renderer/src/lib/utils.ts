@@ -1,52 +1,64 @@
-import type { PieceSymbol } from "chess.js";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { Chess, type PieceSymbol } from 'chess.js'
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMerge(clsx(inputs))
 }
 
 const pieceNames: Record<PieceSymbol, string> = {
-  p: "pawn",
-  n: "knight",
-  b: "bishop",
-  r: "rook",
-  q: "queen",
-  k: "king",
-};
+  p: 'pawn',
+  n: 'knight',
+  b: 'bishop',
+  r: 'rook',
+  q: 'queen',
+  k: 'king',
+}
 
-const buildPieceImgSrc = (color: "w" | "b", type: PieceSymbol) =>
-  `/${color}${type.toUpperCase()}.svg`;
+const buildPieceImgSrc = (color: 'w' | 'b', type: PieceSymbol) =>
+  `/${color}${type.toUpperCase()}.svg`
 
 export const pieceImgMap: Record<PieceSymbol, { w: string; b: string }> = {
   p: {
-    w: buildPieceImgSrc("w", "p"),
-    b: buildPieceImgSrc("b", "p"),
+    w: buildPieceImgSrc('w', 'p'),
+    b: buildPieceImgSrc('b', 'p'),
   },
   n: {
-    w: buildPieceImgSrc("w", "n"),
-    b: buildPieceImgSrc("b", "n"),
+    w: buildPieceImgSrc('w', 'n'),
+    b: buildPieceImgSrc('b', 'n'),
   },
   b: {
-    w: buildPieceImgSrc("w", "b"),
-    b: buildPieceImgSrc("b", "b"),
+    w: buildPieceImgSrc('w', 'b'),
+    b: buildPieceImgSrc('b', 'b'),
   },
   r: {
-    w: buildPieceImgSrc("w", "r"),
-    b: buildPieceImgSrc("b", "r"),
+    w: buildPieceImgSrc('w', 'r'),
+    b: buildPieceImgSrc('b', 'r'),
   },
   q: {
-    w: buildPieceImgSrc("w", "q"),
-    b: buildPieceImgSrc("b", "q"),
+    w: buildPieceImgSrc('w', 'q'),
+    b: buildPieceImgSrc('b', 'q'),
   },
   k: {
-    w: buildPieceImgSrc("w", "k"),
-    b: buildPieceImgSrc("b", "k"),
+    w: buildPieceImgSrc('w', 'k'),
+    b: buildPieceImgSrc('b', 'k'),
   },
-};
+}
 
 export const capitalize = (str: string) => {
-  return `${str[0].toUpperCase()}${str.slice(1, str.length)}`;
-};
+  return `${str[0].toUpperCase()}${str.slice(1, str.length)}`
+}
 
-export const parseTimer = () => {};
+export const parseTimer = () => {}
+
+export const naturalToUci = (moves: string[]) => {
+  const chess = new Chess()
+  const uciMoves: string[] = []
+  moves.forEach((m) => {
+    const result = chess.move(m)
+    if (result) {
+      uciMoves.push(result.from + result.to + (result.promotion || ''))
+    }
+  })
+  return uciMoves
+}

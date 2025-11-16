@@ -10,14 +10,22 @@ export type MoveQuality =
   | "blunder" // ??
   | "missed-win"; // Victoire manquée
 
-export type BetterGameTree = {
-  move: string | null;
+export type GameTreeMove = {
+  move: string;
   bestMoves?: string[];
   moveQuality?: MoveQuality | null;
   evaluation?: { cp?: number | null; mate?: number | null };
-  nextVariation: BetterGameTree[];
-  isMain: boolean;
 };
+
+export type GameTree = {
+  whiteMove: GameTreeMove;
+  blackMove: GameTreeMove | null;
+  whiteVariations: GameTree[];
+  blackVariations: GameTree[];
+  index: number;
+  isMain: boolean;
+}[];
+
 export type EvalOutput = {
   move: string | null;
   bestMoves: string[];

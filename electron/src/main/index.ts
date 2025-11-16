@@ -14,8 +14,8 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
+      sandbox: false,
+    },
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -58,7 +58,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('stockfish:evalGame', async (_event, moves: string[]) => {
     try {
-      const result = await stockfish.evalGame(moves)
+      const result = await stockfish.evalGame(moves, true)
       return result
     } catch (error) {
       console.error('Error evaluating the game:', error)
