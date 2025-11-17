@@ -1,7 +1,8 @@
 import {
   Challenge,
-  tryCatch,
+  Game,
   tryCatchAsync,
+  UserWithElos,
   type GameTimeControl,
 } from "@shared";
 import type { User } from "../lib/auth";
@@ -20,9 +21,13 @@ export const matchmakingServiceMessageKeys = [
 ];
 
 export class MatchmakingService {
-  private readonly queueMap = new Map<GameTimeControl, Map<User["id"], User>>();
+  private readonly queueMap = new Map<
+    GameTimeControl,
+    Map<User["id"], UserWithElos>
+  >();
   private readonly userWsMap: Record<User["id"], ElysiaWS[]> = {};
   private readonly challenges: Record<string, Challenge> = {};
+  private readonly userGameId: Record<User["id"], Game["id"]> = {};
 
   private readonly incomingChallenges: Record<User["id"], Set<string>> = {};
 
@@ -112,7 +117,9 @@ export class MatchmakingService {
       console.error(error);
       return;
     }
+
     for (const user of users) {
+      this.userGameId[user.id] = data.newGameId;
       this.send("game", user.id, {
         users: data.users,
         timeControl,
@@ -138,8 +145,15 @@ export class MatchmakingService {
     }
   }
 
-  handleConnection = ({ user, ws }: { user: User; ws: ElysiaWS }) => {
+  private sendGameState = async (userId: User["id"]) => {
+    const gameId = this.userGameId[userId];
+    if (!gameId) return;
+    this.send("hasGame", userId, { gameId });
+  };
+
+  handleConnection = async ({ user, ws }: { user: User; ws: ElysiaWS }) => {
     this.userWsMap[user.id] = [...(this.userWsMap[user.id] ?? []), ws];
+    this.sendGameState(user.id);
   };
 
   handleDisconnection = ({ user, ws }: { user: User; ws: ElysiaWS }) => {
@@ -155,9 +169,7 @@ export class MatchmakingService {
   }: WsMessage & { user: User }) => {
     switch (key) {
       case "joinQueue": {
-        const { data, error } = tryCatch(() =>
-          this.joinQueue({ user, ...payload }),
-        );
+        this.joinQueue({ user, ...payload });
         break;
       }
       case "quitQueue": {

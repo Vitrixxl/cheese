@@ -15,6 +15,9 @@ export type ServerGame = {
   opponentByUserId: Record<User["id"], User["id"]>;
   timeControl: GameTimeControl;
   chess: Chess;
+  /**
+   * The id of the user who offered the draw
+   */
   drawOffer: User["id"] | null;
   timers: Record<Color, number>;
   timerIncrement: number;
@@ -23,4 +26,11 @@ export type ServerGame = {
     content: string;
   }[];
   firstConRecord: Record<User["id"], boolean>;
+};
+
+export type GameState = Omit<
+  ServerGame,
+  "firstConRecord" | "chess" | "opponentByUserId"
+> & {
+  fen: string;
 };

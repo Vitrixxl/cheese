@@ -16,45 +16,51 @@ export type Profile = User & {
 export const getProfileByUserId = async (
   userId: string,
 ): Promise<Profile | null> => {
-  const result = await db.query.user.findFirst({
+  const results = await db.query.user.findFirst({
     with: {
       elos: {
         columns: { elo: true, category: true },
       },
-      games: {
-        limit: 5,
-        columns: {},
+      whiteGames: {
         with: {
-          game: {
-            columns: {
-              id: true,
-              blackTimer: true,
-              whiteTimer: true,
-              outcome: true,
-              winner: true,
-              moves: true,
-              messages: true,
-              createdAt: true,
-            },
+          black: {
             with: {
-              white: {
-                with: {
-                  elos: true,
-                },
-              },
-              black: {
-                with: {
-                  elos: true,
-                },
-              },
+              elos: true,
+            },
+          },
+          white: {
+            with: {
+              elos: true,
             },
           },
         },
+        limit: 5,
+      },
+      blackGames: {
+        with: {
+          black: {
+            with: {
+              elos: true,
+            },
+          },
+          white: {
+            with: {
+              elos: true,
+            },
+          },
+        },
+        limit: 5,
       },
     },
     where: (user, w) => w.eq(user.id, userId),
   });
 
-  if (!result) return null;
-  return { ...result, games: result.games.map((g) => g.game) };
+  if (!results) return null;
+
+  return {
+    ...results,
+    games: [...results.whiteGames, ...results.blackGames]
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .slice(0, 6),
+  };
 };

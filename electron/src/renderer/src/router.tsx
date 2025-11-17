@@ -7,11 +7,19 @@ import ChatPage from './app/social/chat/page'
 import PuzzleDrivenBoard from './components/drived-board/puzzle/puzzle-driven-board'
 import GamesPage from './app/games/page'
 import GamePage from './app/game/page'
+import Protected from './components/protected'
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AppLayout />}>
+        <Route
+          path="/"
+          element={
+            <Protected>
+              <AppLayout />
+            </Protected>
+          }
+        >
           <Route index element={<AppPage />} />
           <Route path="/social" element={<SocialLayout />}>
             <Route path="user/:userId" element={<SocialUserPage />}></Route>

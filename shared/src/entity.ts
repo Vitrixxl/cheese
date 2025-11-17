@@ -37,6 +37,10 @@ export interface GameWithUsers extends Game {
   black: User & { elos: Elo[] };
 }
 
+export interface UserWithElos extends User {
+  elos: Elo[];
+}
+
 export type ChatWithUsersAndMessages = Chat & {
   users: User[];
   messages: Message[];

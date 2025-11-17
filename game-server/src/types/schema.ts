@@ -1,7 +1,7 @@
 import { messageSchema } from "@game-server/schema";
 import { LocalMove, Outcome, User } from "@shared";
 import z from "zod";
-import { ServerGame } from "./game";
+import { GameState, ServerGame } from "./game";
 
 export type ChessClientMessage = z.infer<typeof messageSchema>;
 export type ChessServerMessages = {
@@ -23,6 +23,7 @@ export type ChessServerMessages = {
     winner: User["id"] | null;
     outcome: Outcome;
   };
+  gameState: GameState;
   disconnection: null;
   connection: null;
 };

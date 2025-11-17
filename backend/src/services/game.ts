@@ -1,12 +1,5 @@
 import { db } from "@backend/lib/db";
-import { or, eq, getTableColumns } from "drizzle-orm";
-import { game, user } from "@backend/lib/db/schema";
 import { Game, User } from "@shared";
-import { alias } from "drizzle-orm/sqlite-core";
-import { exclude } from "backend/lib/utils";
-
-const white = alias(user, "whiteUser");
-const black = alias(user, "blackUser");
 
 export const getGame = async ({ gameId }: { gameId: Game["id"] }) => {
   const result = await db.query.game.findFirst({

@@ -7,6 +7,11 @@ export const gameIdAtom = atom<string | null>(null)
 export const isInQueueAtom = atom<boolean>(false)
 export const colorAtom = atom<Color | null>(null)
 export const initialTimerAtom = atom<number>(0)
+export const timersAtom = atom<Record<Color, number>>({
+  w: 0,
+  b: 0,
+})
+export const timerIncrementAtom = atom<number | null>(null)
 export const gameCategoryAtom = atom<{
   category: GameCategory
   timeControl: GameTimeControl

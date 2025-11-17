@@ -227,15 +227,6 @@ export const elo = sqliteTable(
   (t) => [primaryKey({ columns: [t.userId, t.category] })],
 );
 
-export const usersToGames = sqliteTable("users_to_games", {
-  userId: text()
-    .references(() => user.id)
-    .notNull(),
-  gameId: text()
-    .references(() => game.id)
-    .notNull(),
-});
-
 export const analysis = sqliteTable("analysis", {
   id: integer().primaryKey({ autoIncrement: true }),
   gameId: text().references(() => game.id),
@@ -271,7 +262,6 @@ export const gameRelations = relations(game, ({ one, many }) => ({
     references: [user.id],
     relationName: "black",
   }),
-  users: many(usersToGames),
 }));
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -280,20 +270,21 @@ export const userRelations = relations(user, ({ many }) => ({
   groupLinks: many(usersToGroups),
   friendLinks1: many(usersToUsers, { relationName: "user1" }),
   friendLinks2: many(usersToUsers, { relationName: "user2" }),
-  games: many(usersToGames),
+  whiteGames: many(game, { relationName: "white" }),
+  blackGames: many(game, { relationName: "black" }),
   elos: many(elo),
 }));
 
-export const usersToGamesRelations = relations(usersToGames, ({ one }) => ({
-  user: one(user, {
-    fields: [usersToGames.userId],
-    references: [user.id],
-  }),
-  game: one(game, {
-    fields: [usersToGames.gameId],
-    references: [game.id],
-  }),
-}));
+// export const usersToGamesRelations = relations(usersToGames, ({ one }) => ({
+//   user: one(user, {
+//     fields: [usersToGames.userId],
+//     references: [user.id],
+//   }),
+//   game: one(game, {
+//     fields: [usersToGames.gameId],
+//     references: [game.id],
+//   }),
+// }));
 
 export const elosRelation = relations(elo, ({ one }) => ({
   user: one(user, {

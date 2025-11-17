@@ -12,6 +12,7 @@ import { Chess, Color } from "chess.js";
 import { GameInstance } from "./engine";
 import { messageSchema } from "./schema";
 import { WithColor, WithOptionalWS } from "./types";
+import { getGameState } from "./services/game";
 
 export const gameMap = new Map<string, GameInstance>();
 
@@ -32,7 +33,6 @@ const app = new Elysia()
   .post(
     "/create-game",
     ({ body: { timeControl, users } }) => {
-      console.log({ timeControl });
       const [user1, user2] = users;
       const color = getColor();
       const newGameId = Bun.randomUUIDv7();
@@ -109,6 +109,17 @@ const app = new Elysia()
             }),
           )
           .length(2),
+      }),
+    },
+  )
+  .get(
+    "/state/:gameId",
+    async ({ params: { gameId } }) => {
+      return getGameState(gameId);
+    },
+    {
+      params: z.object({
+        gameId: z.string(),
       }),
     },
   )

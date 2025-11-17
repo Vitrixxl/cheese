@@ -1,13 +1,10 @@
 import { cn } from '@/lib/utils'
-import { turnAtom } from '@/store'
+import { timersAtom, turnAtom } from '@/store'
 import type { Color } from 'chess.js'
 import { useAtomValue } from 'jotai'
-import React from 'react'
 
 type TimerPros = {
   color: Color
-  initialTimer: number
-  increment: number
 }
 export const formatTimer = (ms: number) => {
   const totalSeconds = Math.floor(ms / 1000)
@@ -31,47 +28,18 @@ export const formatTimer = (ms: number) => {
   return { hours, minutes, seconds, tenths }
 }
 
-export default function Timer({ color, initialTimer, increment }: TimerPros) {
-  const [timer, setTimer] = React.useState(initialTimer)
-  const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
-  const lastDelta = React.useRef<number>(performance.now())
-  const previousTurn = React.useRef<Color | null>(null)
+export default function Timer({ color }: TimerPros) {
+  const timer = useAtomValue(timersAtom)
   const turn = useAtomValue(turnAtom)
 
-  React.useEffect(() => {
-    // Ajouter l'incrément seulement si le tour vient de changer de moi vers l'adversaire
-    if (turn && turn != color && previousTurn.current === color) {
-      setTimer((prev) => prev + increment)
-    }
-    previousTurn.current = turn
-
-    if (turn != color && intervalRef.current) {
-      clearInterval(intervalRef.current)
-      return
-    }
-    lastDelta.current = performance.now()
-    const interval = setInterval(() => {
-      const now = performance.now()
-      const delta = now - lastDelta.current
-      lastDelta.current = now
-      setTimer((prev) => Math.max(Math.floor(prev - delta), 0))
-    }, 20)
-    intervalRef.current = interval
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [turn])
-
-  const { hours, minutes, seconds, tenths } = formatTimer(timer)
+  const { hours, minutes, seconds, tenths } = formatTimer(timer[color])
 
   return (
     <div
       className={cn(
         'bg-primary text-primary-foreground w-fit rounded-xl px-4 py-2 text-4xl',
         turn != color && 'opacity-50',
-        minutes == '00' && 'bg-destructive text-foreground'
+        minutes == '00' && 'bg-destructive text-foreground',
       )}
     >
       {hours != '00'
