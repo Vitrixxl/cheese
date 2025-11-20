@@ -1,11 +1,14 @@
 import {
-  Chat,
-  InsertMessage,
+  chat,
+  type Chat,
+  type Message,
   message,
   usersToChats,
 } from "@backend/lib/db/schema";
 import { db } from "../lib/db";
-import { ChatData, ChatWithUsersAndMessages, User } from "@shared";
+import { type ChatWithUsers, type MessageWithGame, type User } from "@shared";
+import { and, eq } from "drizzle-orm";
+import { hubService } from "./hub";
 
 export const isInChat = async (userId: User["id"], chatId: Chat["id"]) => {
   const result = await db.query.usersToChats.findFirst({
@@ -19,7 +22,7 @@ export const getChats = async (
   userId: string,
   limit: number,
   offset: number,
-): Promise<ChatWithUsersAndMessages[]> => {
+): Promise<ChatWithUsers[]> => {
   const chats = await db.query.chat.findMany({
     where: (chat, w) =>
       w.inArray(
@@ -31,7 +34,6 @@ export const getChats = async (
       ),
     with: {
       userLinks: { with: { user: true } },
-      messages: true,
     },
     limit: limit + 1,
     offset,
@@ -40,17 +42,53 @@ export const getChats = async (
   return chats.map((c) => ({
     id: c.id,
     name: c.name,
-    users: c.userLinks.map((ul) => ul.user),
-    messages: c.messages,
+    users: c.userLinks.map((ul) => ({ ...ul.user, lastSeenAt: ul.lastSeenAt })),
+    lastMessageAt: c.lastMessageAt,
   }));
 };
 
-export const getChatMessage = async (
+export const getChat = async (
+  chatId: Chat["id"],
+  userId: User["id"],
+): Promise<ChatWithUsers | null> => {
+  const canRead = await isInChat(userId, chatId);
+  if (!canRead) return null;
+  const result = await db.query.chat.findFirst({
+    where: (chat, w) => w.eq(chat.id, chatId),
+    with: {
+      userLinks: { with: { user: true } },
+    },
+  });
+  if (!result) return null;
+  return {
+    ...result,
+    users: result.userLinks.map((ul) => ({
+      ...ul.user,
+      lastSeenAt: ul.lastSeenAt,
+    })),
+  };
+};
+
+export const updateLastSeen = async (
+  userId: User["id"],
+  chatId: Chat["id"],
+) => {
+  await db
+    .update(usersToChats)
+    .set({
+      lastSeenAt: Date.now(),
+    })
+    .where(
+      and(eq(usersToChats.chatId, chatId), eq(usersToChats.userId, userId)),
+    );
+};
+
+export const getChatMessages = async (
   userId: User["id"],
   chatId: number,
   limit: number,
   offset: number,
-) => {
+): Promise<MessageWithGame[] | null> => {
   const exist = await db.query.chat.findFirst({
     columns: {},
     where: (chat, w) => w.eq(chat.id, chatId),
@@ -61,7 +99,20 @@ export const getChatMessage = async (
   if (!exist) return null;
   return await db.query.message.findMany({
     with: {
-      chat: true,
+      game: {
+        with: {
+          black: {
+            with: {
+              elos: true,
+            },
+          },
+          white: {
+            with: {
+              elos: true,
+            },
+          },
+        },
+      },
     },
     where: (message, w) => w.eq(message.chatId, chatId),
     orderBy: (message) => message.createdAt,
@@ -73,33 +124,43 @@ export const getChatMessage = async (
 export const insertChatMessage = async (
   userId: User["id"],
   chatId: Chat["id"],
-  messagePayload: Omit<InsertMessage, "userId" | "chatId">,
+  messagePayload: Omit<Message, "userId" | "chatId" | "createdAt">,
 ) => {
   const canWrite = await isInChat(userId, chatId);
   if (!canWrite) return false;
   await db.insert(message).values({ ...messagePayload, userId, chatId });
-  return true;
-};
-
-export const getChatData = async (
-  userId: User["id"],
-  chatId: Chat["id"],
-): Promise<ChatData | null> => {
-  if (!(await isInChat(userId, chatId))) return null;
-  const chat = await db.query.chat.findFirst({
+  await db.update(chat).set({ lastMessageAt: Date.now() });
+  const users = await db.query.usersToChats.findMany({
+    where: (utc, w) =>
+      w.and(w.eq(utc.chatId, chatId), w.ne(utc.userId, userId)),
+  });
+  const messageWithGame = await db.query.message.findFirst({
     with: {
-      userLinks: {
+      user: true,
+      game: {
         with: {
-          user: true,
+          black: {
+            with: {
+              elos: true,
+            },
+          },
+          white: {
+            with: {
+              elos: true,
+            },
+          },
         },
       },
     },
-    where: (chat, w) => w.eq(chat.id, chatId),
+    where: (message, w) => w.eq(message.id, messagePayload.id),
   });
-  if (!chat) return null;
-  return {
-    id: chat.id,
-    name: chat.name,
-    users: chat.userLinks.map((ul) => ul.user),
-  };
+  if (!messageWithGame) return;
+
+  hubService.sendMessage(
+    users.map((u) => u.userId),
+    chatId,
+    messageWithGame,
+  );
+
+  return true;
 };

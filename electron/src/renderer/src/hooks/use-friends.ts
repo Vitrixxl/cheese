@@ -28,26 +28,6 @@ export const useSendFriendRequest = () => {
   }
 }
 
-export const useFriends = () => {
-  return useQuery<FriendWithChat[]>({
-    queryKey: ['friends'],
-    queryFn: async () => {
-      const { data, error } = await api.friend.get()
-      if (error) throw error
-      return data
-    },
-  })
-}
-
-export const useAddFriend = () => {
-  return useMutation({
-    mutationKey: ['add-friend'],
-    mutationFn: async ({ userId }: { userId: string }) => {
-      api.social['friend-requests'].post({ toUserId: userId })
-    },
-  })
-}
-
 export const useProcessFriendRequest = () => {
   return useMutation({
     mutationKey: ['friend'],
@@ -68,7 +48,7 @@ export const useSearchFriend = (query: string) => {
   return useQuery({
     queryKey: ['search-friend', query],
     queryFn: async () => {
-      const { data, error } = await api.friend.users.search.get({
+      const { data, error } = await api.friend.search.get({
         query: { q: query },
       })
       console.error(error)

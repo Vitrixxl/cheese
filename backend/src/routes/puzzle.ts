@@ -2,8 +2,8 @@ import { db } from "@backend/lib/db";
 import { user as userTable } from "@backend/lib/db/schema";
 import { authMacro } from "@backend/macros/auth";
 import { Chess } from "chess.js";
+import { eq } from "drizzle-orm";
 import Elysia from "elysia";
-import z from "zod";
 
 export const puzzleRoutes = new Elysia({ prefix: "/puzzle" })
   /**
@@ -32,9 +32,12 @@ export const puzzleRoutes = new Elysia({ prefix: "/puzzle" })
   .post(
     "/solve",
     async ({ user, status }) => {
-      await db.update(userTable).set({
-        puzzleLevel: user.puzzleLevel + 1,
-      });
+      await db
+        .update(userTable)
+        .set({
+          puzzleLevel: user.puzzleLevel + 1,
+        })
+        .where(eq(userTable.id, user.id));
 
       const result = await db.query.puzzle.findFirst({
         where: (puzzle, w) => w.eq(puzzle.id, user.puzzleLevel + 2),

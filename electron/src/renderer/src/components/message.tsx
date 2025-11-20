@@ -1,36 +1,30 @@
-import { cn } from "@/lib/utils";
-import type { Message as MessageType } from "@shared";
-import { type User } from "better-auth";
-import { UserAvatar } from "./user-avatar";
+import { cn } from '@/lib/utils'
+import type { Message as MessageType } from '@shared'
 
 type MessageProps = {
-  user: User;
-  message: MessageType;
-  isOwn: boolean;
-};
+  message: MessageType
+  isOwn: boolean
+}
 
-export const ChatMessage = ({ user, message, isOwn }: MessageProps) => {
+export const ChatMessage = ({ message, isOwn }: MessageProps) => {
   return (
     <div
       className={cn(
-        "w-4/5 flex flex-col gap-1",
-        isOwn ? "ml-auto items-end" : "mr-auto",
+        'flex w-fit max-w-4/5 flex-col gap-1',
+        isOwn ? 'ml-auto items-end' : 'mr-auto items-start',
       )}
     >
-      <div className="flex gap-2 items-center ">
-        <p className="text-muted-foreground text-sm">
-          {isOwn ? "You" : user.name}
-        </p>
-        <UserAvatar url={user.image} name={user.name} />
-      </div>
+      {/* <div className={cn('flex items-center gap-2', !isOwn && 'flex-row-reverse')}> */}
+      {/*   <p className="text-muted-foreground text-sm">{isOwn ? 'You' : user.name}</p> */}
+      {/* </div> */}
       <div
         className={cn(
-          "rounded-lg px-2 py-1 break-all",
-          isOwn ? "bg-primary text-primary-foreground" : "bg-secondary",
+          'w-fit max-w-full rounded-lg px-2 py-1 break-all',
+          isOwn ? 'bg-primary text-primary-foreground' : 'bg-secondary',
         )}
       >
         {message.content}
       </div>
     </div>
-  );
-};
+  )
+}

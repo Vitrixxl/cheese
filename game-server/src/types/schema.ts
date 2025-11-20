@@ -1,14 +1,10 @@
 import { messageSchema } from "@game-server/schema";
-import { LocalMove, Outcome, User } from "@shared";
+import { type LocalMove, type Outcome, type User } from "@shared";
 import z from "zod";
-import { GameState, ServerGame } from "./game";
+import { type GameState } from "./game";
 
 export type ChessClientMessage = z.infer<typeof messageSchema>;
 export type ChessServerMessages = {
-  gameStatus: Pick<ServerGame, "timeControl" | "timers" | "messages"> & {
-    opponent: User;
-  };
-
   move: {
     move: LocalMove;
     timers: Record<User["id"], number>;

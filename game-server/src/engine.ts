@@ -1,16 +1,23 @@
 import { tryCatch, type Outcome, type User } from "@shared";
-import { ServerGame } from "./types/game";
+import { type ServerGame } from "./types/game";
 import { ElysiaWS } from "elysia/ws";
-import { ChessClientMessage, ChessServerMessages } from "./types/schema";
-import { Color } from "chess.js";
+import { type ChessClientMessage, type ChessServerMessages } from "./types/schema";
+import { type Color } from "chess.js";
 import { api } from "./lib/api";
 
 export class GameInstance {
   game: ServerGame;
+  userIdToWs: Record<User["id"], ElysiaWS[]> = {};
   timerInterval: ReturnType<typeof setInterval> | null = null;
-  constructor(game: ServerGame) {
+  constructor(
+    game: ServerGame,
+    private readonly onFinish: () => void,
+  ) {
     this.game = game;
-    this;
+    this.userIdToWs = {
+      [Object.keys(game.users)[0]]: [],
+      [Object.keys(game.users)[1]]: [],
+    };
   }
 
   private send<K extends keyof ChessServerMessages>(
@@ -18,15 +25,12 @@ export class GameInstance {
     userId: User["id"],
     payload: ChessServerMessages[K],
   ) {
-    const ws = this.game.users[userId].ws;
-    console.log({ ws, key, payload });
-    if (!ws) return;
-    ws.send(
-      JSON.stringify({
+    for (const ws of this.userIdToWs[userId]) {
+      ws.send({
         key,
         payload,
-      }),
-    );
+      });
+    }
   }
 
   private finishGame = async (outcome: Outcome, winner: Color | null) => {
@@ -39,7 +43,7 @@ export class GameInstance {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
-    const result = await api.game.save.post({
+    await api.game.save.post({
       gameId: this.game.id,
       pgn: this.game.chess.pgn(),
       outcome,
@@ -52,7 +56,7 @@ export class GameInstance {
       messages: this.game.messages,
       timers: this.game.timers,
     });
-    console.log({ result });
+    this.onFinish();
   };
 
   private incrementTimer = () => {
@@ -62,6 +66,7 @@ export class GameInstance {
     }
     this.game.timers.w += this.game.timerIncrement;
   };
+
   private startTimers = () => {
     let lastTick = 0;
 
@@ -90,7 +95,7 @@ export class GameInstance {
   };
 
   addConnection = ({ userId, ws }: { userId: User["id"]; ws: ElysiaWS }) => {
-    this.game.users[userId].ws = ws;
+    this.userIdToWs[userId].push(ws);
     const opponentId = this.game.opponentByUserId[userId];
     this.send("connection", opponentId, null);
     if (!this.game.firstConRecord[userId]) {
@@ -100,17 +105,23 @@ export class GameInstance {
       }
       return;
     }
-    this.send("gameStatus", userId, {
+    this.send("gameState", userId, {
+      id: this.game.id,
       timers: this.game.timers,
       messages: this.game.messages,
       timeControl: this.game.timeControl,
-      opponent: this.game.users[opponentId],
+      users: this.game.users,
+      drawOffer: this.game.drawOffer,
+      pgn: this.game.chess.pgn(),
+      timerIncrement: this.game.timerIncrement,
     });
   };
 
-  dropConnection = ({ userId }: { userId: User["id"] }) => {
-    this.game.users[userId].ws = null;
-    this.send("disconnection", this.game.opponentByUserId[userId], null);
+  dropConnection = ({ userId, ws }: { userId: User["id"]; ws: ElysiaWS }) => {
+    this.userIdToWs[userId].filter((w) => ws.id != w.id);
+    if (this.userIdToWs[userId]?.length == 0) {
+      this.send("disconnection", this.game.opponentByUserId[userId], null);
+    }
   };
 
   handleMessage = ({
@@ -162,12 +173,22 @@ export class GameInstance {
         break;
       }
       case "drawOffer": {
+        console.log("aa");
+        console.log(this.game.drawOffer);
+        if (this.game.drawOffer && this.game.drawOffer != userId) {
+          this.finishGame("draw", null);
+          break;
+        }
         this.send("drawOffer", opponentId, null);
+        this.game.drawOffer = userId;
         break;
       }
       case "drawResponse": {
+        if (!this.game.drawOffer || this.game.drawOffer != userId) break;
+        this.game.drawOffer = null;
         if (payload.response) {
           this.finishGame("draw", null);
+          break;
         }
         break;
       }

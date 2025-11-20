@@ -1,8 +1,14 @@
 import { ValidationError } from "elysia";
-import type { WithOptionalWS, WithColor, GameState } from "@game-server/types";
+import type { WithOptionalWS, WithColor } from "@game-server/types";
 import z from "zod";
 import { wsMessageSchema } from "./schema";
-import type { Challenge, GameTimeControl, User } from "@shared";
+import type {
+  Challenge,
+  Chat,
+  GameTimeControl,
+  MessageWithGameAndUser,
+  User,
+} from "@shared";
 
 export type UnauthorizedError = {
   status: 401;
@@ -29,13 +35,19 @@ export type WsServerMessage = {
     timeControl: GameTimeControl;
     users: WithColor<WithOptionalWS<User>>[];
   };
-  hasGame: {
-    gameId: string;
+  state: {
+    gameId: string | null;
+    challenges: Challenge[];
   };
-  declinedChallenge: {
+  challengeResponse: {
     challengeId: string;
+    response: boolean;
   };
   challenge: Challenge;
+  message: {
+    message: MessageWithGameAndUser;
+    chatId: Chat["id"];
+  };
 };
 
 export type WsServerMessageWithKey = {

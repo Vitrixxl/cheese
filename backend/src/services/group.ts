@@ -1,13 +1,13 @@
 import {
   chat,
   group,
-  Group,
+  type Group,
   groupRequest,
   usersToChats,
   usersToGroups,
 } from "@backend/lib/db/schema";
 import { db } from "../lib/db";
-import { User } from "@shared";
+import { type User } from "@shared";
 import { and, eq } from "drizzle-orm";
 
 export const isInGroup = async (

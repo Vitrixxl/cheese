@@ -1,10 +1,10 @@
 import {
-  Group,
-  Message,
-  Game,
-  Chat,
-  Elo,
-  Puzzle,
+  type Group,
+  type Message,
+  type Game,
+  type Chat,
+  type Elo,
+  type Puzzle,
 } from "@backend/lib/db/schema";
 import type { User } from "@backend/lib/auth";
 import type { Color } from "chess.js";
@@ -29,7 +29,10 @@ export interface GroupWithUsers extends Group {
 }
 
 export interface MessageWithGame extends Message {
-  game?: Game;
+  game: GameWithUsers | null;
+}
+export interface MessageWithGameAndUser extends MessageWithGame {
+  user: User;
 }
 
 export interface GameWithUsers extends Game {
@@ -41,9 +44,8 @@ export interface UserWithElos extends User {
   elos: Elo[];
 }
 
-export type ChatWithUsersAndMessages = Chat & {
-  users: User[];
-  messages: Message[];
+export type ChatWithUsers = Chat & {
+  users: (User & { lastSeenAt: number | null })[];
 };
 
 export type ChatData = Chat & {

@@ -1,5 +1,5 @@
-import { GameTimeControl, User } from "@shared";
-import { Chess, Color } from "chess.js";
+import { type GameTimeControl, type User } from "@shared";
+import { Chess, type Color } from "chess.js";
 import { ElysiaWS } from "elysia/ws";
 
 export type WithColor<T> = {
@@ -32,5 +32,5 @@ export type GameState = Omit<
   ServerGame,
   "firstConRecord" | "chess" | "opponentByUserId"
 > & {
-  fen: string;
+  pgn: string;
 };

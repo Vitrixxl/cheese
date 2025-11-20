@@ -1,3 +1,3 @@
 import { treaty } from "@elysiajs/eden";
-import { GameApi } from "@shared";
+import type { GameApi } from "@shared";
 export const gameServerApi = treaty<GameApi>("localhost:3001");

@@ -1,14 +1,13 @@
-import { contextBridge, ipcRenderer } from 'electron'
-import type { BetterGameTree } from '@shared'
+import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 //
 // Custom APIs for renderer
 const api = {
-  stockfish: {
-    evalGame: (moves: string[]): Promise<BetterGameTree | null> => {
-      return ipcRenderer.invoke('stockfish:evalGame', moves)
-    }
-  }
+  // stockfish: {
+  //   evalGame: (moves: string[]): Promise<BetterGameTree | null> => {
+  //     return ipcRenderer.invoke('stockfish:evalGame', moves)
+  //   },
+  // },
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

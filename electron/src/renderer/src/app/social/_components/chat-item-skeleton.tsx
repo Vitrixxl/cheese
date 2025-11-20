@@ -1,16 +1,16 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { UserAvatar, UserAvatarSkeleton } from "@/components/user-avatar";
+import { Skeleton } from '@/components/ui/skeleton'
+import { UserAvatarSkeleton } from '@/components/user-avatar'
 
 export default function ChatItemSkeleton() {
   return (
-    <div className="flex gap-2 w-full items-center">
+    <div className="flex w-full items-center gap-2">
       <div className="flex">
         <UserAvatarSkeleton />
       </div>
-      <div className="flex flex-col flex-1 gap-2">
-        <Skeleton className="w-full h-4" />
-        <Skeleton className="w-4/5 h-4" />
+      <div className="flex flex-1 flex-col gap-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
       </div>
     </div>
-  );
+  )
 }

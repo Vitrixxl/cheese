@@ -13,29 +13,32 @@ const gameServerRoot = resolve('../game-server/src')
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
   },
   renderer: {
     root: rendererRoot,
     publicDir: rendererPublicRoot,
+    build: {
+      target: 'esnext',
+    },
     resolve: {
       alias: {
         '@': rendererSrcRoot,
         '@shared': sharedRoot,
         '@backend': backendRoot,
-        '@game-server': gameServerRoot
-      }
+        '@game-server': gameServerRoot,
+      },
     },
     plugins: [
       react({
         babel: {
-          plugins: [['babel-plugin-react-compiler']]
-        }
+          plugins: [['babel-plugin-react-compiler']],
+        },
       }),
-      tailwindcss()
+      tailwindcss(),
     ],
     server: {
       fs: {
@@ -46,9 +49,9 @@ export default defineConfig({
           rendererPublicRoot,
           sharedRoot,
           backendRoot,
-          gameServerRoot
-        ]
-      }
-    }
-  }
+          gameServerRoot,
+        ],
+      },
+    },
+  },
 })

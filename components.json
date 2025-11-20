@@ -4,19 +4,15 @@
   "rsc": false,
   "tsx": true,
   "tailwind": {
-    "config": "frontend/tailwind.config.ts",
-    "css": "frontend/src/index.css",
+    "config": "electron/tailwind.config.ts",
+    "css": "electron/src/renderer/src/index.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
-  },
-  "registries": {}
+    "ui": "@/components/ui"
+  }
 }

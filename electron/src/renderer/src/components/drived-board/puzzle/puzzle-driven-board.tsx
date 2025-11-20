@@ -1,15 +1,7 @@
 import Board from '@/components/board'
-import {
-  boardAtom,
-  hintMovesAtom,
-  hoverSquareAtom,
-  selectedSquareAtom,
-  uiChessBoardAtom
-} from '@/store/chess-board'
 import Protected from '@/components/protected'
 import { useBoardController } from '@/hooks/use-board-controller'
 import { useNextPuzzle, usePuzzle } from '@/hooks/use-puzzle'
-import { useAtomValue } from 'jotai'
 import React from 'react'
 import type { LocalMove } from '@/types'
 import { Chess } from 'chess.js'
@@ -23,11 +15,6 @@ export default function PuzzleDrivenBoard() {
   const movesRef = React.useRef<string[]>([])
   const movesCountRef = React.useRef(1)
   const { applyLocalMove, selectSquare, setHover, loadFen, chess } = useBoardController()
-
-  const board = useAtomValue(uiChessBoardAtom)
-  const moves = useAtomValue(hintMovesAtom)
-  const hover = useAtomValue(hoverSquareAtom)
-  const selected = useAtomValue(selectedSquareAtom)
 
   const handleMove = (m: LocalMove) => {
     const clone = new Chess(chess.fen())
@@ -65,10 +52,6 @@ export default function PuzzleDrivenBoard() {
         board={
           <Board
             loading={isLoading || isNextLoading}
-            selected={selected}
-            moves={moves}
-            hover={hover}
-            board={board}
             onSelect={selectSquare}
             onHover={setHover}
             onMove={handleMove}

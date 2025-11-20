@@ -6,15 +6,16 @@
   "workspaces": [
     "backend",
     "game-server",
-    "frontend",
-    "shared"
+    "shared",
+    "electron"
   ],
   "scripts": {
-    "dev:front": "bun --cwd electron dev ",
+    "dev:front": "cd electron  && npm run dev",
     "dev:back": "bun --cwd backend dev",
     "dev:game": "bun --cwd game-server dev",
-    "dev": "bunx --bun concurrently \"bun run dev:front\" \"bun run dev:back\" \"bun run dev:game\"",
-    "build:front": "bun --cwd frontend build",
+    "dev": "parallel  --line-buffer --tag ::: \"bun run dev:back\" \"bun run dev:game\" \"bun run dev:front\"",
+    "build:front": "bun --cwd electron build",
+    "shadcn": "bunx --bun --cwd electron shadcn@latest",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",
     "db:push": "bunx drizzle-kit push",

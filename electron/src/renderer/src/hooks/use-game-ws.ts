@@ -5,12 +5,11 @@ import {
   gameMessagesAtom,
   colorAtom,
   currentDriverAtom,
-  gameCategoryAtom,
   gameIdAtom,
-  initialTimerAtom,
   isInQueueAtom,
   playersAtom,
   timersAtom,
+  drawOfferAtom,
 } from '@/store'
 import { tryCatch } from '@shared'
 import { gameApi } from '@/lib/api'
@@ -19,32 +18,31 @@ import type { WsChessServerMessageWithKey } from '@game-server/types/schema'
 import { useBoardController } from './use-board-controller'
 import { gameWsAtom } from '@/store/ws'
 import { useUser } from './use-user'
+import { useNavigate } from 'react-router'
 
 export default function useGameWs() {
   const [ws, setWs] = useAtom(gameWsAtom)
   const [gameId] = useAtom(gameIdAtom)
   const { data: authData } = auth.useSession()
+  const navigate = useNavigate()
   const user = useUser()
-  const { applyLocalMove, reset, setOutcome, loadFen } = useBoardController()
+  const { applyLocalMove, reset, setOutcome, loadPgn } = useBoardController()
   const setCurrentDriver = useSetAtom(currentDriverAtom)
   const setIsInQueue = useSetAtom(isInQueueAtom)
   const setColor = useSetAtom(colorAtom)
-  const setInitialTimer = useSetAtom(initialTimerAtom)
   const setTimers = useSetAtom(timersAtom)
   const setPlayers = useSetAtom(playersAtom)
-  const setGameCategory = useSetAtom(gameCategoryAtom)
   const setGameMessages = useSetAtom(gameMessagesAtom)
   const setEndGameDialogOpen = useSetAtom(endGameDialogOpenAtom)
+  const setDrawOffer = useSetAtom(drawOfferAtom)
   const handleClose = () => {
     console.log('closing')
     setWs(null)
   }
   const handleMessage = (ev: MessageEvent<any>) => {
     const { key, payload } = ev.data as WsChessServerMessageWithKey
+    console.log(ev.data)
     switch (key) {
-      case 'gameStatus': {
-        break
-      }
       case 'move': {
         console.log({ payload })
         applyLocalMove({ ...payload.move })
@@ -55,7 +53,10 @@ export default function useGameWs() {
         setGameMessages((prev) => [...prev, payload])
         break
       }
-      case 'drawOffer':
+      case 'drawOffer': {
+        setDrawOffer(true)
+        break
+      }
       case 'start': {
         reset()
         break
@@ -71,8 +72,8 @@ export default function useGameWs() {
         setColor(payload.users[user.id].color)
         setTimers(payload.timers)
         setPlayers(Object.values(payload.users))
-        loadFen(payload.fen)
-
+        loadPgn(payload.pgn)
+        navigate('/')
         break
       }
       case 'disconnection':

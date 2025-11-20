@@ -6,15 +6,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-const pieceNames: Record<PieceSymbol, string> = {
-  p: 'pawn',
-  n: 'knight',
-  b: 'bishop',
-  r: 'rook',
-  q: 'queen',
-  k: 'king',
-}
-
 const buildPieceImgSrc = (color: 'w' | 'b', type: PieceSymbol) =>
   `/${color}${type.toUpperCase()}.svg`
 

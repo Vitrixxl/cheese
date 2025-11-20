@@ -1,6 +1,6 @@
 import { db } from "@backend/lib/db";
-import { Elo } from "@backend/lib/db/schema";
-import { GameWithUsers, User } from "@shared";
+import { type Elo } from "@backend/lib/db/schema";
+import { type GameWithUsers, type User } from "@shared";
 
 export type Profile = User & {
   /**

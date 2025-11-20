@@ -8,27 +8,27 @@ const avatarVariants = cva('flex justify-center items-center rounded-lg', {
     size: {
       lg: 'size-10 !text-lg',
       md: 'size-8 !text-lg',
-      sm: 'size-6 !text-xs'
-    }
+      sm: 'size-6 !text-xs',
+    },
   },
 
   defaultVariants: {
-    size: 'md'
-  }
+    size: 'md',
+  },
 })
 export const UserAvatar = ({
   size,
   url,
   name,
   className,
-  innerClassName
+  innerClassName,
 }: VariantProps<typeof avatarVariants> & {
   url?: string | null
   name: string
   className?: string
   innerClassName?: string
 }) => {
-  const parts = name.split(' ')
+  const parts = name.toUpperCase().split(' ')
   let displayLetters!: string
   if (parts.length > 0) {
     displayLetters = parts[0][0] + parts[1][0]
@@ -39,7 +39,9 @@ export const UserAvatar = ({
   return (
     <Avatar className={cn(avatarVariants({ size }), className)}>
       <AvatarImage src={url ?? undefined} className={cn(innerClassName)} />
-      <AvatarFallback className={cn(innerClassName)}>{displayLetters}</AvatarFallback>
+      <AvatarFallback className={cn('select-none', innerClassName)}>
+        {displayLetters}
+      </AvatarFallback>
     </Avatar>
   )
 }

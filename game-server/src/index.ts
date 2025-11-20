@@ -3,15 +3,15 @@ import { cors } from "@elysiajs/cors";
 import z from "zod";
 import {
   GAME_TIME_CONTROLS,
-  GameTimeControl,
+  type GameTimeControl,
   INITIALS_TIMERS,
   TIME_CONTROL_INCREMENTS,
-  User,
+  type User,
 } from "@shared";
-import { Chess, Color } from "chess.js";
+import { Chess, type Color } from "chess.js";
 import { GameInstance } from "./engine";
 import { messageSchema } from "./schema";
-import { WithColor, WithOptionalWS } from "./types";
+import { type WithColor, type WithOptionalWS } from "./types";
 import { getGameState } from "./services/game";
 
 export const gameMap = new Map<string, GameInstance>();
@@ -47,40 +47,43 @@ const app = new Elysia()
       };
       gameMap.set(
         newGameId,
-        new GameInstance({
-          id: newGameId,
-          timeControl,
-          users: {
-            [user1.id]: { ...user1, color, ws: null },
-            [user2.id]: {
-              ...user2,
-              color: color == "w" ? "b" : ("w" as Color),
-              ws: null,
+        new GameInstance(
+          {
+            id: newGameId,
+            timeControl,
+            users: {
+              [user1.id]: { ...user1, color, ws: null },
+              [user2.id]: {
+                ...user2,
+                color: color == "w" ? "b" : ("w" as Color),
+                ws: null,
+              },
+            },
+            opponentByUserId: {
+              [user2.id]: user1.id,
+              [user1.id]: user2.id,
+            },
+            timers: {
+              b: initialTimer,
+              w: initialTimer,
+            },
+            timerIncrement: Object.keys(TIME_CONTROL_INCREMENTS).includes(
+              timeControl,
+            )
+              ? TIME_CONTROL_INCREMENTS[
+                  timeControl as keyof typeof TIME_CONTROL_INCREMENTS
+                ]
+              : 0,
+            chess: new Chess(),
+            drawOffer: null,
+            messages: [],
+            firstConRecord: {
+              [user1.id]: false,
+              [user2.id]: false,
             },
           },
-          opponentByUserId: {
-            [user2.id]: user1.id,
-            [user1.id]: user2.id,
-          },
-          timers: {
-            b: initialTimer,
-            w: initialTimer,
-          },
-          timerIncrement: Object.keys(TIME_CONTROL_INCREMENTS).includes(
-            timeControl,
-          )
-            ? TIME_CONTROL_INCREMENTS[
-                timeControl as keyof typeof TIME_CONTROL_INCREMENTS
-              ]
-            : 0,
-          chess: new Chess(),
-          drawOffer: null,
-          messages: [],
-          firstConRecord: {
-            [user1.id]: false,
-            [user2.id]: false,
-          },
-        }),
+          () => gameMap.delete(newGameId),
+        ),
       );
       return {
         newGameId,
@@ -135,7 +138,7 @@ const app = new Elysia()
       const userId = ws.data.query.userId;
       const gameId = ws.data.query.gameId;
       const currentGame = gameMap.get(gameId)!;
-      currentGame.dropConnection({ userId });
+      currentGame.dropConnection({ userId, ws });
     },
     message: (ws, message) => {
       const { data, error } = messageSchema.safeParse(message);
@@ -153,6 +156,7 @@ const app = new Elysia()
       if (!currentGame || !currentGame.game.users[userId]) {
         return status("Unauthorized");
       }
+      return;
     },
     query: z.object({
       gameId: z.uuidv7(),

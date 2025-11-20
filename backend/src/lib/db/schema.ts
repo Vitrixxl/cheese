@@ -7,7 +7,11 @@ import {
   real,
 } from "drizzle-orm/sqlite-core";
 import { type Color } from "chess.js";
-import { GAME_TIME_CONTROLS, GameTimeControl, Outcome } from "@shared";
+import {
+  GAME_TIME_CONTROLS,
+  type GameTimeControl,
+  type Outcome,
+} from "@shared";
 import { relations } from "drizzle-orm";
 
 export const user = sqliteTable("user", {
@@ -181,6 +185,10 @@ export const usersToGroups = sqliteTable(
 
 export const chat = sqliteTable("chat", {
   id: integer().primaryKey({ autoIncrement: true }),
+  /**
+   * Milisecondes
+   */
+  lastMessageAt: integer(),
   name: text(),
 });
 
@@ -191,10 +199,14 @@ export const usersToChats = sqliteTable("users_to_chats", {
   chatId: integer("chat_id")
     .references(() => chat.id)
     .notNull(),
+  /**
+   * Milisecondes
+   */
+  lastSeenAt: integer().default(0),
 });
 
 export const message = sqliteTable("message", {
-  id: integer().primaryKey({ autoIncrement: true }),
+  id: text().primaryKey(),
   userId: text()
     .references(() => user.id)
     .notNull(),
@@ -251,7 +263,7 @@ export const groupsRelations = relations(group, ({ one, many }) => ({
   userLinks: many(usersToGroups),
 }));
 
-export const gameRelations = relations(game, ({ one, many }) => ({
+export const gameRelations = relations(game, ({ one }) => ({
   white: one(user, {
     fields: [game.whiteId],
     references: [user.id],

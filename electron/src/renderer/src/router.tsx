@@ -8,6 +8,7 @@ import PuzzleDrivenBoard from './components/drived-board/puzzle/puzzle-driven-bo
 import GamesPage from './app/games/page'
 import GamePage from './app/game/page'
 import Protected from './components/protected'
+import LoginPage from './app/login/page'
 export default function Router() {
   return (
     <BrowserRouter>
@@ -29,6 +30,7 @@ export default function Router() {
           <Route path="/games" element={<GamesPage />}></Route>
           <Route path="/game/:gameId" element={<GamePage />}></Route>
         </Route>
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,5 +1,5 @@
 import { db } from "@backend/lib/db";
-import { Game, User } from "@shared";
+import { type Game, type User } from "@shared";
 
 export const getGame = async ({ gameId }: { gameId: Game["id"] }) => {
   const result = await db.query.game.findFirst({

@@ -1,12 +1,10 @@
 import { UserAvatar } from '@/components/user-avatar'
-import type { GameWithUsers, Outcome } from '@shared'
-import { gameIconMap } from '@/components/sidebar/game-sidebar'
+import type { GameWithUsers } from '@shared'
+import { gameIconMap } from '@/components/game-selector'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import { Clock, Crown, LucideCog, LucideCrown, Swords, Target } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { Clock, LucideCrown, Target } from 'lucide-react'
+import { Link } from 'react-router'
 import { capitalize, cn } from '@/lib/utils'
 
 type GameItemProps = {
@@ -22,8 +20,6 @@ const formatTimer = (ms: number) => {
 }
 
 export default function GameItem({ game, currentUserId }: GameItemProps) {
-  const navigate = useNavigate()
-
   const isWhite = currentUserId === game.whiteId
   const isBlack = currentUserId === game.blackId
   const playerColor = isWhite ? 'w' : isBlack ? 'b' : null
@@ -45,14 +41,14 @@ export default function GameItem({ game, currentUserId }: GameItemProps) {
           isWin && 'border-green-500/50 bg-green-500/5 hover:bg-green-500/10',
           isLoss && 'border-red-500/50 bg-red-500/5 hover:bg-red-500/10',
           isDraw && 'border-yellow-500/50 bg-yellow-500/5 hover:bg-yellow-500/10',
-          !playerColor && 'hover:bg-accent'
+          !playerColor && 'hover:bg-accent',
         )}
       >
         <div className="flex items-center justify-between gap-4 px-4">
           <div
             className={cn(
               'flex flex-1 flex-col items-start gap-1',
-              game.winner === 'w' && 'scale-105'
+              game.winner === 'w' && 'scale-105',
             )}
           >
             <div className="relative">
@@ -97,7 +93,7 @@ export default function GameItem({ game, currentUserId }: GameItemProps) {
                   ? 'bg-white-square text-background'
                   : game.winner == 'b'
                     ? 'bg-black-square'
-                    : null
+                    : null,
               )}
             >
               {capitalize(game.outcome)}
@@ -107,7 +103,7 @@ export default function GameItem({ game, currentUserId }: GameItemProps) {
           <div
             className={cn(
               'flex flex-1 flex-col items-end gap-1',
-              game.winner === 'b' && 'scale-105'
+              game.winner === 'b' && 'scale-105',
             )}
           >
             <div className="relative">

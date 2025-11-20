@@ -12,7 +12,6 @@ import {
   uiMovesPathKeyAtom,
 } from '@/store/chess-board'
 import type { LocalMove } from '@/types/chess'
-import type { Outcome, User } from '@shared'
 import { Chess, type Move, type Square } from 'chess.js'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 
@@ -86,6 +85,16 @@ export function useBoardController() {
     setHover(null)
   }
 
+  const loadPgn = (pgn: string) => {
+    chess.loadPgn(pgn)
+    uiChess.loadPgn(pgn)
+    bumpUiBoard()
+    bumpBoard()
+    setSelected(null)
+    setMoves([])
+    setHover(null)
+  }
+
   const reset = () => {
     chess.reset()
     uiChess.reset()
@@ -133,5 +142,6 @@ export function useBoardController() {
     setMovesPath,
     setUiMovesPathKey,
     resyncUi,
+    loadPgn,
   }
 }

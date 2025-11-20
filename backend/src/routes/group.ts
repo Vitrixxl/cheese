@@ -86,7 +86,7 @@ export const groupRoutes = new Elysia({ prefix: "group" })
           message: "Unauthorized",
         });
       }
-      status(200);
+      return status(200);
     },
     {
       auth: true,
@@ -109,7 +109,7 @@ export const groupRoutes = new Elysia({ prefix: "group" })
           message: "Unauthorized",
         });
       }
-      status(200);
+      return status(200);
     },
     {
       auth: true,

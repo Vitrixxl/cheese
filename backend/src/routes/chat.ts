@@ -2,10 +2,11 @@ import Elysia from "elysia";
 import z from "zod";
 import { authMacro } from "../macros/auth";
 import {
-  getChatData,
-  getChatMessage,
+  getChat,
+  getChatMessages,
   getChats,
   insertChatMessage,
+  updateLastSeen,
 } from "../services/chat";
 
 export const chatRoutes = new Elysia({ prefix: "chats" })
@@ -28,15 +29,27 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
     },
   )
   .get(
-    "/:chatId/data",
+    "/:chatId",
     async ({ params: { chatId }, user, status }) => {
-      const result = await getChatData(user.id, chatId);
-      if (!result) {
-        return status(403, {
-          message: "Unauthorized",
+      const chat = await getChat(chatId, user.id);
+      if (!chat) {
+        return status(404, {
+          message: "No chat found",
         });
       }
-      return result;
+      return chat;
+    },
+    {
+      auth: true,
+      params: z.object({
+        chatId: z.coerce.number(),
+      }),
+    },
+  )
+  .post(
+    "/seen/:chatId",
+    async ({ user, params: { chatId } }) => {
+      await updateLastSeen(user.id, chatId);
     },
     {
       auth: true,
@@ -48,7 +61,7 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
   .get(
     "/messages/:chatId",
     async ({ params: { chatId }, user, status, query: { limit, cursor } }) => {
-      const messages = await getChatMessage(user.id, chatId, limit, cursor);
+      const messages = await getChatMessages(user.id, chatId, limit, cursor);
       if (messages == null) {
         return status(403, {
           message: "Unauthorized",
@@ -88,8 +101,9 @@ export const chatRoutes = new Elysia({ prefix: "chats" })
         chatId: z.coerce.number(),
       }),
       body: z.object({
-        content: z.string().optional(),
-        gameId: z.string().optional(),
+        id: z.string(),
+        content: z.string().nullable(),
+        gameId: z.string().nullable(),
       }),
     },
   );

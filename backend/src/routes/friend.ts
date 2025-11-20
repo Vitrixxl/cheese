@@ -8,24 +8,12 @@ import {
   getFriends,
   handleFriendRequestResponse,
   insertFriendRequest,
-  searchUsers,
+  searchFriends,
 } from "../services/friend";
 
 export const friendRoutes = new Elysia({ prefix: "friend" })
   .use(authMacro)
-  .get(
-    "/users/search",
-    async ({ user, query: { limit, q } }) => {
-      return await searchUsers(user.id, q, limit);
-    },
-    {
-      auth: true,
-      query: z.object({
-        q: z.string(),
-        limit: z.optional(z.number().default(10)),
-      }),
-    },
-  )
+
   .get(
     "/",
     async ({ user }) => {
@@ -50,6 +38,19 @@ export const friendRoutes = new Elysia({ prefix: "friend" })
       auth: true,
       params: z.object({
         id: z.string(),
+      }),
+    },
+  )
+  .get(
+    "/search",
+    async ({ user, query: { limit, q } }) => {
+      return await searchFriends(user.id, q, limit);
+    },
+    {
+      auth: true,
+      query: z.object({
+        q: z.string(),
+        limit: z.optional(z.number().default(10)),
       }),
     },
   )

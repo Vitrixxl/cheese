@@ -1,54 +1,62 @@
 import { api } from '@/lib/api'
-import type { InfiniteData } from '@tanstack/react-query'
 import { queryClient } from '@/providers/query-provider'
-import { type ChatData, type Chat, type ChatWithUsersAndMessages, type Message } from '@shared'
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
+import { type Chat, type ChatWithUsers, type MessageWithGame } from '@shared'
+import { useInfiniteQuery, useMutation, useQuery, type InfiniteData } from '@tanstack/react-query'
+import { useUser } from './use-user'
 
 export const useChats = () => {
+  const user = useUser()
   return useInfiniteQuery({
     queryKey: ['chats'],
     queryFn: async ({ pageParam }) => {
       const { data, error } = await api.chats.get({
-        query: { cursor: pageParam, limit: 50 }
+        query: { cursor: pageParam, limit: 50 },
       })
       if (error) {
         throw new Error(error.value.message)
       }
 
-      for (const chat of data.chats) {
-        const isFetching = queryClient.isFetching({
-          queryKey: ['message', chat.id]
-        })
-        if (isFetching) continue
-        let prevData!: InfiniteData<{ messages: Message[]; nextCursor: number }> | undefined
-
-        prevData = queryClient.getQueryData<
-          InfiniteData<{ messages: Message[]; nextCursor: number }>
-        >(['messages', chat.id])
-
-        if (!prevData) {
-          prevData = {
-            pages: [{ messages: chat.messages, nextCursor: 0 }],
-            pageParams: []
+      const upToDateChats = data.chats.map((c) => {
+        const prevData = queryClient.getQueryData<ChatWithUsers>(['chat', c.id])
+        console.log({ prevData })
+        queryClient.setQueryData<ChatWithUsers>(['chat', c.id], c)
+        if (prevData) {
+          const localUser = prevData.users.find((u) => u.id == user.id)
+          console.log(localUser)
+          if (!localUser) return c
+          return {
+            ...c,
+            users: prevData.users.map((u) => {
+              if (u.id == localUser.id) {
+                return {
+                  ...u,
+                  lastSeenAt: localUser.lastSeenAt,
+                }
+              }
+              return u
+            }),
           }
         }
-        queryClient.setQueryData<InfiniteData<{ messages: Message[]; nextCursor: number }>>(
-          ['messages', chat.id],
-          prevData
-        )
+        return c
+      })
 
-        queryClient.setQueryData<Omit<ChatWithUsersAndMessages, 'messages'>>(
-          ['chat-data', chat.id],
-          { id: chat.id, name: chat.name, users: chat.users }
-        )
-      }
-
-      return data
+      return { ...data, chats: upToDateChats }
     },
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor
     },
-    initialPageParam: 0
+    initialPageParam: 0,
+  })
+}
+
+export const useChat = (chatId: Chat['id']) => {
+  return useQuery({
+    queryKey: ['chat', chatId],
+    queryFn: async () => {
+      const { data, error } = await api.chats({ chatId }).get()
+      if (error) throw new Error(error.value.message)
+      return data
+    },
   })
 }
 
@@ -59,8 +67,8 @@ export const useChatMessages = (chatId: Chat['id']) => {
       const { data, error } = await api.chats.messages({ chatId }).get({
         query: {
           cursor: pageParam,
-          limit: 50
-        }
+          limit: 50,
+        },
       })
       if (error) throw new Error(error.value.message)
       return data
@@ -68,28 +76,87 @@ export const useChatMessages = (chatId: Chat['id']) => {
     getNextPageParam: (lastPage) => {
       return lastPage.nextCursor
     },
-    initialPageParam: 0
+    initialPageParam: 0,
+  })
+}
+
+export const useLastSeen = (chatId: number) => {
+  const user = useUser()
+  return useMutation({
+    mutationKey: ['lastSeen', chatId],
+    mutationFn: async () => {
+      await api.chats.seen({ chatId }).post()
+    },
+    onMutate: () => {
+      console.log('mutating')
+      const prevData = queryClient.getQueryData<
+        InfiniteData<{ chats: ChatWithUsers[]; nextCursor: number | null }>
+      >(['chats'])
+      console.log(prevData)
+      if (!prevData) return
+      const newPages = prevData.pages.map((p) => ({
+        ...p,
+        chats: p.chats.map((c) => {
+          let users = [...c.users]
+          if (c.id == chatId) {
+            users = c.users.map((u) => {
+              if (u.id == user.id) {
+                return {
+                  ...u,
+                  lastSeenAt: Date.now(),
+                }
+              }
+              return u
+            })
+          }
+          return { ...c, users }
+        }),
+      }))
+      queryClient.setQueryData(['chats'], {
+        pages: newPages,
+        pageParams: prevData.pageParams,
+      })
+    },
   })
 }
 
 export const useSendChatMessage = (chatId: Chat['id']) => {
   return useMutation({
-    mutationFn: async ({ content, gameId }: { content?: string; gameId?: string }) => {
+    mutationFn: async ({
+      messageId,
+      content,
+      gameId,
+    }: {
+      content: string | null
+      gameId: string | null
+      messageId: string
+    }) => {
       await api.chats.messages({ chatId }).post({
+        id: messageId,
         content,
-        gameId
+        gameId,
       })
-    }
+    },
   })
 }
 
-export const useChatData = (chatId: Chat['id']) => {
-  return useQuery<ChatData>({
-    queryKey: ['chat-data', chatId],
-    queryFn: async () => {
-      const { data, error } = await api.chats({ chatId }).data.get()
-      if (error) throw new Error(error.value.message)
-      return data
-    }
-  })
+export const useAppendMessage = () => {
+  return async (chatId: Chat['id'], message: MessageWithGame) => {
+    const prevData = queryClient.getQueryData<
+      InfiniteData<{ messages: MessageWithGame[]; nextCursor: number | null }>
+    >(['messages', chatId])
+    console.log({ prevData })
+    if (!prevData) return
+
+    queryClient.setQueryData(['messages', chatId], {
+      ...prevData,
+      pages: prevData.pages.map((p, i) => {
+        if (i != 0) return p
+        return {
+          ...p,
+          messages: [...p.messages, message],
+        }
+      }),
+    })
+  }
 }

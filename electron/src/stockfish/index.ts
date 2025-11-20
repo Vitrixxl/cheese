@@ -68,53 +68,53 @@ export class Stockfish {
     engine.stdin.write(cmd + '\n')
   }
 
-  private getMoveQuality = (
-    prevEval: Pick<EvalOutput, 'evaluation'>['evaluation'],
-    currentNode: EvalOutput,
-    move: string,
-    moves: string[],
-  ): MoveQuality | null => {
-    const chess = new Chess()
-    moves.forEach((m) => chess.move(m))
-
-    const uciMove = `${move.from}${move.to}${move.promotion}`
-    const isSacrifice = chess.moves().includes(move.san)
-    if (isSacrifice && currentNode.bestMoves.includes(uciMove)) {
-      return 'brilliant'
-    }
-    if (isSacrifice && !currentNode.bestMoves.includes(uciMove)) {
-      return 'blunder'
-    }
-    if (prevEval.mate && !currentNode.evaluation.mate) {
-      return 'blunder'
-    }
-    if (!prevEval.mate && currentNode.evaluation.mate) {
-      return 'great'
-    }
-    if (currentNode.bestMoves[0] == uciMove) {
-      return 'best'
-    }
-    if (prevEval.mate && currentNode.evaluation.mate) {
-      const diff = Math.abs(currentNode.evaluation.mate) - Math.abs(prevEval.mate)
-      if (diff >= 0) {
-        return 'good'
-      }
-      return 'great'
-    }
-    if (!prevEval.cp || !currentNode.evaluation.cp) return null
-    const diff = Math.abs(currentNode.evaluation.cp) - Math.abs(prevEval.cp)
-    if (diff > 0) {
-      return 'good'
-    }
-    if (diff < 20) {
-      return 'inaccuracy'
-    }
-    if (diff < 30) {
-      return 'mistake'
-    }
-    return 'blunder'
-  }
-
+  // private getMoveQuality = (
+  //   prevEval: Pick<EvalOutput, 'evaluation'>['evaluation'],
+  //   currentNode: EvalOutput,
+  //   move: string,
+  //   moves: string[],
+  // ): MoveQuality | null => {
+  //   const chess = new Chess()
+  //   moves.forEach((m) => chess.move(m))
+  //
+  //   const uciMove = `${move.from}${move.to}${move.promotion}`
+  //   const isSacrifice = chess.moves().includes(move.san)
+  //   if (isSacrifice && currentNode.bestMoves.includes(uciMove)) {
+  //     return 'brilliant'
+  //   }
+  //   if (isSacrifice && !currentNode.bestMoves.includes(uciMove)) {
+  //     return 'blunder'
+  //   }
+  //   if (prevEval.mate && !currentNode.evaluation.mate) {
+  //     return 'blunder'
+  //   }
+  //   if (!prevEval.mate && currentNode.evaluation.mate) {
+  //     return 'great'
+  //   }
+  //   if (currentNode.bestMoves[0] == uciMove) {
+  //     return 'best'
+  //   }
+  //   if (prevEval.mate && currentNode.evaluation.mate) {
+  //     const diff = Math.abs(currentNode.evaluation.mate) - Math.abs(prevEval.mate)
+  //     if (diff >= 0) {
+  //       return 'good'
+  //     }
+  //     return 'great'
+  //   }
+  //   if (!prevEval.cp || !currentNode.evaluation.cp) return null
+  //   const diff = Math.abs(currentNode.evaluation.cp) - Math.abs(prevEval.cp)
+  //   if (diff > 0) {
+  //     return 'good'
+  //   }
+  //   if (diff < 20) {
+  //     return 'inaccuracy'
+  //   }
+  //   if (diff < 30) {
+  //     return 'mistake'
+  //   }
+  //   return 'blunder'
+  // }
+  //
   private parseStockfishOutput = (lines: string[], multiPv: number): EvalOutput => {
     const infoLines = lines.slice(lines.length - 1 - multiPv, lines.length - 1)
     const bestMoves: string[] = []

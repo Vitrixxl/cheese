@@ -5,7 +5,7 @@ import {
   usersToUsers,
 } from "@backend/lib/db/schema";
 import { db } from "../lib/db";
-import { User } from "@shared";
+import { type User } from "@shared";
 import { and, eq, or } from "drizzle-orm";
 
 export type FriendWithChat = User & { chatId: number | null };
@@ -32,7 +32,7 @@ export const isFriend = async (userId: User["id"], friendId: User["id"]) => {
   return Boolean(result);
 };
 
-export const searchUsers = async (
+export const searchFriends = async (
   userId: User["id"],
   query: string,
   limit: number = 10,
@@ -42,18 +42,32 @@ export const searchUsers = async (
 
   const normalizedLimit = Math.min(Math.max(limit, 1), 50);
 
-  const users = await db.query.user.findMany({
+  const results = await db.query.user.findMany({
     where: (user, w) =>
-      // w.and(
-      w.or(
-        w.like(user.name, `%${trimmedQuery}%`),
-        w.like(user.email, `%${trimmedQuery}%`),
+      w.and(
+        w.or(
+          w.like(user.name, `%${trimmedQuery}%`),
+          w.like(user.email, `%${trimmedQuery}%`),
+        ),
+        w.ne(user.id, userId),
       ),
-    // w.ne(user.id, userId),
-    // ),
+    with: {
+      friendLinks1: {
+        where: (friendLink, w) => w.eq(friendLink.userId2, userId),
+      },
+      friendLinks2: {
+        where: (friendLink, w) => w.eq(friendLink.userId1, userId),
+      },
+    },
     limit: normalizedLimit,
   });
-  return users;
+
+  return results
+    .filter((u) => u.friendLinks2.length > 0 || u.friendLinks1.length > 0)
+    .map((u) => {
+      const { friendLinks1: _, friendLinks2: __, ...rest } = u;
+      return rest;
+    });
 };
 
 export const getFriends = async (userId: string): Promise<User[]> => {

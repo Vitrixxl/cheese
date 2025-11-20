@@ -1,26 +1,22 @@
 import {
-  Challenge,
-  Game,
+  type Challenge,
+  type Chat,
+  type Game,
+  type MessageWithGameAndUser,
   tryCatchAsync,
-  UserWithElos,
+  type UserWithElos,
   type GameTimeControl,
 } from "@shared";
 import type { User } from "../lib/auth";
-import { WsMessage, WsServerMessage } from "@backend/lib/types";
+import { type WsMessage, type WsServerMessage } from "@backend/lib/types";
 import { ElysiaWS } from "elysia/ws";
-import { gameServerApi } from "backend/lib/api";
+import { gameServerApi } from "@backend/lib/api";
 import { getUsersById } from "./friend";
+import { getUserElos } from "./users";
 
-const MAX_ELO_DIFF = 50;
+// const MAX_ELO_DIFF = 50;
 
-export const matchmakingServiceMessageKeys = [
-  "joinQueue",
-  "quitQueue",
-  "challenge",
-  "cancelChallenge",
-];
-
-export class MatchmakingService {
+export class HubService {
   private readonly queueMap = new Map<
     GameTimeControl,
     Map<User["id"], UserWithElos>
@@ -61,12 +57,12 @@ export class MatchmakingService {
     user,
     timeControl,
   }: {
-    user: User;
+    user: UserWithElos;
     timeControl: GameTimeControl;
   }) {
     let queue = this.queueMap.get(timeControl);
     if (!queue) {
-      queue = new Map<User["id"], User>();
+      queue = new Map<User["id"], UserWithElos>();
       this.queueMap.set(timeControl, queue);
     }
     queue.set(user.id, user);
@@ -119,6 +115,7 @@ export class MatchmakingService {
     }
 
     for (const user of users) {
+      console.log(user.id, data.newGameId);
       this.userGameId[user.id] = data.newGameId;
       this.send("game", user.id, {
         users: data.users,
@@ -145,15 +142,23 @@ export class MatchmakingService {
     }
   }
 
-  private sendGameState = async (userId: User["id"]) => {
-    const gameId = this.userGameId[userId];
-    if (!gameId) return;
-    this.send("hasGame", userId, { gameId });
+  private sendHubState = async (userId: User["id"]) => {
+    const gameId = this.userGameId[userId] ?? null;
+    const challengesIds = this.incomingChallenges[userId];
+
+    const challenges: Challenge[] = [];
+    if (challengesIds) {
+      challengesIds.forEach((id) => {
+        const challenge = this.challenges[id];
+        if (challenge) challenges.push(challenge);
+      });
+    }
+    this.send("state", userId, { gameId, challenges });
   };
 
   handleConnection = async ({ user, ws }: { user: User; ws: ElysiaWS }) => {
     this.userWsMap[user.id] = [...(this.userWsMap[user.id] ?? []), ws];
-    this.sendGameState(user.id);
+    this.sendHubState(user.id);
   };
 
   handleDisconnection = ({ user, ws }: { user: User; ws: ElysiaWS }) => {
@@ -169,7 +174,8 @@ export class MatchmakingService {
   }: WsMessage & { user: User }) => {
     switch (key) {
       case "joinQueue": {
-        this.joinQueue({ user, ...payload });
+        const elos = await getUserElos(user.id);
+        this.joinQueue({ user: { ...user, elos }, ...payload });
         break;
       }
       case "quitQueue": {
@@ -177,6 +183,7 @@ export class MatchmakingService {
         break;
       }
       case "challenge": {
+        console.log({ payload });
         const { data, error } = await tryCatchAsync(getUsersById([payload.to]));
         if (error || data.length == 0) {
           return;
@@ -198,9 +205,9 @@ export class MatchmakingService {
         const currentChallenge = this.challenges[payload.challengeId];
         if (!currentChallenge) return;
         if (!payload.response) {
-          this.send("declinedChallenge", currentChallenge.from.id, {
-            challengeId: payload.challengeId,
-          });
+          // this.send("declinedChallenge", currentChallenge.from.id, {
+          //   challengeId: payload.challengeId,
+          // });
           return;
         }
         this.createGame({
@@ -210,6 +217,15 @@ export class MatchmakingService {
       }
     }
   };
+  sendMessage = (
+    to: User["id"][],
+    chatId: Chat["id"],
+    message: MessageWithGameAndUser,
+  ) => {
+    to.forEach((userId) => {
+      this.send("message", userId, { chatId, message });
+    });
+  };
 }
 
-export const matchmakingService = new MatchmakingService();
+export const hubService = new HubService();

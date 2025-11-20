@@ -4,7 +4,7 @@ import {
   LucideGraduationCap,
   LucidePuzzle,
   LucideTrophy,
-  LucideUsers
+  LucideUsers,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -13,39 +13,40 @@ import {
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton
+  SidebarMenuButton,
 } from '../ui/sidebar'
-import GameSidebar from './game-sidebar'
 import { SidebarUser } from './sidebar-user'
 import { auth } from '@/lib/auth'
 import { Link } from 'react-router'
+import { ChallengeSidebar } from './challenge-sidebar'
+import { GameSelector } from '../game-selector'
 
 const links = [
   {
     icon: <LucideTrophy className="text-yellow-500" />,
     label: 'Tournaments',
-    to: '/tournaments'
+    to: '/tournaments',
   },
   {
     icon: <LucidePuzzle className="text-green-500" />,
     label: 'Puzzles',
-    to: '/puzzles'
+    to: '/puzzles',
   },
   {
     icon: <LucideChartNetwork className="text-violet-500" />,
     label: 'Analysis',
-    to: '/games'
+    to: '/games',
   },
   {
     icon: <LucideGraduationCap className="text-blue-500" />,
     label: 'Lessons',
-    to: '/lessons'
+    to: '/lessons',
   },
   {
     icon: <LucideUsers />,
     label: 'Social',
-    to: 'social'
-  }
+    to: 'social',
+  },
 ]
 
 export default function AppSidebar() {
@@ -65,8 +66,13 @@ export default function AppSidebar() {
       <SidebarContent className="space-y-0">
         {sessionData && (
           <>
-            <GameSidebar />
+            <SidebarGroup>
+              <SidebarMenu className="flex flex-col gap-4">
+                <GameSelector />
+              </SidebarMenu>
+            </SidebarGroup>
             <SidebarGroup className="gap-2">
+              <ChallengeSidebar />
               {links.map(({ to, icon, label }) => (
                 <SidebarMenu key={to}>
                   <SidebarMenuButton asChild className="relative gap-4">

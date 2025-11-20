@@ -1,13 +1,10 @@
-import { chessChallengesAtom } from '@/store/chess-challenges'
 import {
   colorAtom,
   currentDriverAtom,
   gameCategoryAtom,
   gameIdAtom,
-  initialTimerAtom,
   isInQueueAtom,
   playersAtom,
-  store,
   timerIncrementAtom,
   timersAtom,
 } from '@/store'
@@ -24,6 +21,12 @@ import {
 import { api } from '@/lib/api'
 import { auth } from '@/lib/auth'
 import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
+import { useAppendMessage } from './use-chats'
+import { challengesAtom } from '@/store/hub'
+import { UserAvatar } from '@/components/user-avatar'
+import { Button } from '@/components/ui/button'
+import { gameIconMap } from '@/components/game-selector'
 
 export default function useHubWs() {
   const [ws, setWs] = useAtom(hubWsAtom)
@@ -35,6 +38,8 @@ export default function useHubWs() {
   const setPlayers = useSetAtom(playersAtom)
   const setGameCategory = useSetAtom(gameCategoryAtom)
   const setTimerIncrement = useSetAtom(timerIncrementAtom)
+  const setChallenge = useSetAtom(challengesAtom)
+  const appendMessage = useAppendMessage()
   const { data: authData } = auth.useSession()
   const handleClose = () => {
     setWs(null)
@@ -48,33 +53,67 @@ export default function useHubWs() {
     switch (key) {
       case 'game': {
         const initialTimer = INITIALS_TIMERS[payload.timeControl]
-        store.set(gameCategoryAtom, {
+        setGameCategory({
           timeControl: payload.timeControl,
           category: TIME_CONTROL_TO_CATEGORY[payload.timeControl],
         })
-        store.set(gameIdAtom, payload.newGameId)
-        store.set(currentDriverAtom, 'online')
+        setGameId(payload.newGameId)
+        setCurrentDriver('online')
+        setIsInQueue(false)
         setTimers({ b: initialTimer, w: initialTimer })
+        setColor(payload.users.find((u) => u.id == user.id)?.color || null)
         setTimerIncrement(TIME_CONTROL_INCREMENTS[payload.timeControl])
-        store.set(isInQueueAtom, false)
-
-        store.set(colorAtom, payload.users.find((u) => u.id == user.id)?.color || null)
-        store.set(initialTimerAtom, initialTimer)
-        store.set(playersAtom, payload.users)
+        setPlayers(payload.users)
         navigate('/')
         break
       }
 
-      case 'declinedChallenge': {
-        store.set(chessChallengesAtom, (prev) => prev.filter((c) => c.id != payload.challengeId))
+      case 'message': {
+        if (payload.message.game) {
+          toast(`${payload.message.user.name} shared a game with you`)
+        }
+        toast('New message', {
+          description: (
+            <div className="flex gap-2">
+              <p className="font-semibold">{payload.message.user.name} : </p>
+              <p className="break-all text-ellipsis">{payload.message.content}</p>
+            </div>
+          ),
+        })
+        appendMessage(payload.chatId, payload.message)
         break
       }
+
       case 'challenge': {
-        store.set(chessChallengesAtom, (prev) => [...prev, payload])
+        setChallenge((prev) => [...prev, payload])
+
+        const Icon = gameIconMap[TIME_CONTROL_TO_CATEGORY[payload.timeControl]]
+        toast(
+          <div className="flex w-full flex-1 items-center gap-2">
+            <UserAvatar name={payload.from.name} url={payload.from.image} />
+            <p className="text-sm font-medium">{payload.from.name}</p>
+            <div className="ml-auto flex items-center gap-1">
+              <Icon
+                className="ml-auto size-6"
+                style={{
+                  color: `var(--${TIME_CONTROL_TO_CATEGORY[payload.timeControl]}-color)`,
+                }}
+              />
+              <Button asChild size="sm" variant="outline">
+                <div className="!text-foreground !bg-input/30 select-none">
+                  {payload.timeControl}
+                </div>
+              </Button>
+            </div>
+          </div>,
+        )
         break
       }
-      case 'hasGame': {
-        setGameId(payload.gameId)
+      case 'state': {
+        if (payload.gameId) {
+          setGameId(payload.gameId)
+        }
+        setChallenge(payload.challenges)
       }
     }
   })

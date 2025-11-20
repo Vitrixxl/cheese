@@ -22,6 +22,8 @@ export const outcomeAtom = atom<{
   outcome: Outcome
 } | null>(null)
 
+export const drawOfferAtom = atom<boolean>(false)
+
 export const gameMessagesAtom = atom<{ content: string; userId: User['id'] }[]>([])
 
 export const endGameDialogOpenAtom = atom<boolean>(false)
