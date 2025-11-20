@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { LucideRewind } from 'lucide-react'
 import { Button } from './ui/button'
 import { useAtomValue } from 'jotai'
-import { chessHistoryAtom, historyIndexAtom } from '@/store'
+import { chessHistoryAtom } from '@/store'
 import { useBoardController } from '@/hooks/use-board-controller'
 import { ScrollArea } from './ui/scroll-area'
 import { capitalize, cn } from '@/lib/utils'
@@ -28,7 +28,6 @@ export const BoardHistory = () => {
   const [resignClicked, setResignClicked] = React.useState(false)
   const history = useAtomValue(chessHistoryAtom)
   const parsedHistory = parseHistory(history)
-  const index = useAtomValue(historyIndexAtom)
   const { resign, offerDraw, handleDrawResponse } = useGameWsAction()
   const { drawOffer } = useGameWsData()
 
@@ -66,7 +65,7 @@ export const BoardHistory = () => {
                             key={i}
                             className={cn(
                               'bg-accent text-muted-foreground rounded-lg border px-3 py-1 text-lg',
-                              index == renderIndex && 'text-foreground !bg-input/50',
+                              0 == renderIndex && 'text-foreground !bg-input/50',
                             )}
                           >
                             {m}

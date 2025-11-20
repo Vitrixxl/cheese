@@ -29,7 +29,7 @@ export default function useGameWs() {
   const { applyLocalMove, reset, setOutcome, loadPgn } = useBoardController()
   const setCurrentDriver = useSetAtom(currentDriverAtom)
   const setIsInQueue = useSetAtom(isInQueueAtom)
-  const setColor = useSetAtom(colorAtom)
+  const [color, setColor] = useAtom(colorAtom)
   const setTimers = useSetAtom(timersAtom)
   const setPlayers = useSetAtom(playersAtom)
   const setGameMessages = useSetAtom(gameMessagesAtom)
@@ -41,7 +41,6 @@ export default function useGameWs() {
   }
   const handleMessage = (ev: MessageEvent<any>) => {
     const { key, payload } = ev.data as WsChessServerMessageWithKey
-    console.log(ev.data)
     switch (key) {
       case 'move': {
         console.log({ payload })
@@ -58,7 +57,7 @@ export default function useGameWs() {
         break
       }
       case 'start': {
-        reset()
+        reset(color || undefined)
         break
       }
       case 'end': {

@@ -6,13 +6,15 @@ import * as schema from "./db/schema";
 import { db } from "./db";
 import { GAME_TIME_CONTROLS } from "@shared";
 
-console.log("ENV");
-console.log(Bun.env);
-console.log(Bun);
-
 export const auth = betterAuth({
   baseURL: "http://localhost:6969",
   trustedOrigins: ["http://localhost:5173"],
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+    },
+  },
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema,

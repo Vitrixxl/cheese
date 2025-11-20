@@ -7,6 +7,8 @@ import type { LocalMove } from '@/types'
 import { Chess } from 'chess.js'
 import FinishedPuzzleDialog from './finished-dialog-puzzle'
 import BoardContainer from '@/components/board-container'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export default function PuzzleDrivenBoard() {
   const { data, isLoading } = usePuzzle()
@@ -57,6 +59,18 @@ export default function PuzzleDrivenBoard() {
             onMove={handleMove}
             playerColor={data?.color == 'w' ? 'b' : 'w'}
           />
+        }
+        sideBoard={
+          <Card>
+            <CardHeader>
+              <CardTitle>Puzzle : {data?.id}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                {data && data.themes.split(' ').map((t) => <Badge>{t}</Badge>)}
+              </div>
+            </CardContent>
+          </Card>
         }
       />
 

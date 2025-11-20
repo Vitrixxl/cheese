@@ -57,11 +57,11 @@ export default function useHubWs() {
           timeControl: payload.timeControl,
           category: TIME_CONTROL_TO_CATEGORY[payload.timeControl],
         })
+        setColor(payload.users.find((u) => u.id == user.id)?.color || null)
         setGameId(payload.newGameId)
         setCurrentDriver('online')
         setIsInQueue(false)
         setTimers({ b: initialTimer, w: initialTimer })
-        setColor(payload.users.find((u) => u.id == user.id)?.color || null)
         setTimerIncrement(TIME_CONTROL_INCREMENTS[payload.timeControl])
         setPlayers(payload.users)
         navigate('/')

@@ -1,4 +1,5 @@
-import type { Board, DriverType } from '@/types'
+import { Chessinator, type Piece } from '@/lib/chessinator'
+import type { DriverType } from '@/types'
 import type { GameTree } from '@shared'
 import { Chess, type Color, type Move, type Square } from 'chess.js'
 import { atom } from 'jotai'
@@ -9,33 +10,25 @@ export const currentBoardDriverAtom = atom<DriverType>('local')
  * Only use with useAtomValue
  * No need to change it, it will be reset by the useChessBoard()
  */
-export const chessAtom = atom(new Chess())
-
-export const uiChessAtom = atom(new Chess())
+const chess = new Chessinator()
+chess.reset()
+export const chessAtom = atom(chess)
 
 /**
  * This is the one that's gonna be used to render the board
  * We need another one in order to travel into the game history
  */
-export const uiChessBoardAtom = atom<Board>((get) => {
-  get(uiBoardVersionAtom)
-  return get(uiChessAtom).board()
-})
-
-export const historyIndexAtom = atom<number>((get) => {
-  get(uiBoardVersionAtom)
-  return get(uiChessAtom).history().length
-})
 
 export const gameTreeAtom = atom<GameTree>([])
-export const uiMovesPathKeyAtom = atom<string>('')
-export const passedMovesAtom = atom<Move[]>([])
+export const piecesAtom = atom<Piece[]>((get) => {
+  get(boardVersionAtom)
+  return get(chessAtom).getPieces()
+})
 
 /**
  * Use purely for dx, it will trigger a rerender on the board atom
  */
 export const boardVersionAtom = atom<number>(0)
-export const uiBoardVersionAtom = atom<number>(0)
 export const boardAtom = atom<ReturnType<Chess['board']>>((get) => {
   get(boardVersionAtom)
   return get(chessAtom).board()

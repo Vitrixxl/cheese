@@ -12,6 +12,9 @@ import { usersRoutes } from "./routes/users";
 export * from "./lib/types";
 
 const app = new Elysia()
+  .get("/test", ({ request }) => {
+    console.log(request.headers);
+  })
   .use(
     cors({
       credentials: true,

@@ -7,11 +7,12 @@ export default function Protected({ children }: PropsWithChildren) {
   const { user, isPending } = useOptionalUser()
   const navigate = useNavigate()
   React.useEffect(() => {
+    console.log({ isPending })
     if (!user && !isPending) {
       navigate('/login')
     }
-  }, [user])
+  }, [user, isPending])
 
-  if (!user) return null
+  if (!user) return 'rien'
   return children
 }

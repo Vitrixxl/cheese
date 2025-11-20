@@ -1,9 +1,10 @@
 import type { Square, Color } from 'chess.js'
 import {
+  boardAtom,
   hintMovesAtom,
   hoverSquareAtom,
+  piecesAtom,
   selectedSquareAtom,
-  uiChessBoardAtom
 } from '@/store/chess-board'
 import Piece from './piece'
 import { cn } from '@/lib/utils'
@@ -19,7 +20,7 @@ const rankNumbers = [8, 7, 6, 5, 4, 3, 2, 1]
 
 const Crosshair = ({
   variant = 'selected',
-  hasSquare
+  hasSquare,
 }: {
   variant?: 'selected' | 'move'
   hasSquare?: boolean
@@ -33,8 +34,8 @@ const Crosshair = ({
             'grid-cols-[0.25fr_1fr_0.25fr] grid-rows-[0.25fr_1fr_0.25fr]',
             hasSquare
               ? 'inset-0 p-2'
-              : 'top-1/2 left-1/2 size-2/4 -translate-1/2 grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1fr]'
-          )
+              : 'top-1/2 left-1/2 size-2/4 -translate-1/2 grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1fr]',
+          ),
     )}
   >
     <div className="border-background/50 col-start-1 row-start-1 rounded-tl-xl border-t-[6px] border-l-[6px]" />
@@ -54,13 +55,14 @@ export type BoardProps = {
 }
 
 export default function Board({ playerColor, loading, onSelect, onHover, onMove }: BoardProps) {
-  const board = useAtomValue(uiChessBoardAtom)
+  const board = useAtomValue(boardAtom)
   const moves = useAtomValue(hintMovesAtom)
   const hover = useAtomValue(hoverSquareAtom)
   const selected = useAtomValue(selectedSquareAtom)
   const boardRef = React.useRef<HTMLDivElement | null>(null)
+  const pieces = useAtomValue(piecesAtom)
   const [needPromotion, setNeedPromotion] = React.useState<(LocalMove & { color: Color }) | null>(
-    null
+    null,
   )
 
   const turn = useAtomValue(turnAtom)
@@ -97,12 +99,12 @@ export default function Board({ playerColor, loading, onSelect, onHover, onMove 
               className={cn(
                 'relative flex aspect-square items-center justify-center shadow-lg',
                 isDark ? 'bg-black-square' : 'bg-white-square',
-                hover && hover == square?.square && 'shadow-inner'
+                hover && hover == square?.square && 'shadow-inner',
               )}
               onClick={() => !square && onSelect(null)}
             >
               {showCrosshair && <Crosshair variant={crosshairVariant} hasSquare={!!square} />}
-              {moves.some((move) => move.to === squareName) && (
+              {selected && moves.some((move) => move.to === squareName) && (
                 <div
                   className="absolute inset-0 z-20 flex items-center justify-center bg-transparent p-2"
                   onClickCapture={() => {
@@ -111,7 +113,7 @@ export default function Board({ playerColor, loading, onSelect, onHover, onMove 
                       setNeedPromotion({ ...move, color: turn })
                       return
                     }
-                    onMove(move)
+                    onMove({ from: selected, to: squareName })
                   }}
                 />
               )}
@@ -127,40 +129,29 @@ export default function Board({ playerColor, loading, onSelect, onHover, onMove 
               />
             </div>
           )
-        })
+        }),
       )}
-      {displayBoard.map((rank, rankIndex) =>
-        rank.map((square, fileIndex) => {
-          if (!square) return
-          const realSquare =
-            (square as any).square ??
-            (`${fileLetters[fileIndex]}${rankNumbers[rankIndex]}` as Square)
-
-          return (
-            <Piece
-              key={realSquare}
-              color={square.color}
-              square={square.square}
-              playerColor={playerColor}
-              type={square.type}
-              top={`calc((100% * ${rankIndex} / 8) + 1.25%)`}
-              left={`calc((100% * ${fileIndex} / 8) + 1.25%)`}
-              boardRef={boardRef}
-              onHover={onHover}
-              onMove={(m) => {
-                const move = moves.find((move) => move.to == m.to && move.from == m.from)!
-                if (!move) return
-                if (move.isPromotion()) {
-                  setNeedPromotion({ ...m, color: square.color })
-                  return
-                }
-                onMove(m)
-              }}
-              onSelect={onSelect}
-            />
-          )
-        })
-      )}
+      {pieces.map((p) => {
+        return (
+          <Piece
+            key={p.key}
+            piece={p}
+            playerColor={playerColor}
+            boardRef={boardRef}
+            onHover={onHover}
+            onMove={(m) => {
+              const move = moves.find((move) => move.to == m.to && move.from == m.from)!
+              if (!move) return
+              if (move.isPromotion()) {
+                setNeedPromotion({ ...m, color: p.color })
+                return
+              }
+              onMove(m)
+            }}
+            onSelect={onSelect}
+          />
+        )
+      })}
       {loading && (
         <div className="bg-background/30 absolute inset-0 grid place-content-center">
           <LucideLoaderCircle className="size-14 animate-spin" />

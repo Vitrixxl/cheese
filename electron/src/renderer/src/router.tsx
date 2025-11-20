@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { HashRouter, Route, Routes } from 'react-router'
 import AppLayout from './app/layout'
 import AppPage from './app/page'
 import SocialLayout from './app/social/layout'
@@ -9,9 +9,11 @@ import GamesPage from './app/games/page'
 import GamePage from './app/game/page'
 import Protected from './components/protected'
 import LoginPage from './app/login/page'
+import { api } from './lib/api'
 export default function Router() {
+  api.test.get()
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route
           path="/"
@@ -32,6 +34,6 @@ export default function Router() {
         </Route>
         <Route path="/login" element={<LoginPage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }

@@ -1,0 +1,144 @@
+import type { LocalMove } from '@/types'
+import { Chess, Move, type Color, type PieceSymbol, type Square } from 'chess.js'
+
+export type Piece = {
+  piece: string
+  key: string
+  type: PieceSymbol
+  color: Color
+  position: Square
+}
+
+export class Chessinator extends Chess {
+  private pieces: Piece[] = []
+  private preMoves: LocalMove[] = []
+
+  private piecesBySquare: Record<string, Piece> = {}
+
+  private undoedMoves: Move[] = []
+  isInPast = false
+
+  constructor() {
+    super()
+  }
+
+  private buildKey = ({
+    square,
+    type,
+    color,
+  }: {
+    square: Square
+    type: PieceSymbol
+    color: Color
+  }) => {
+    return `${square}-${type}-${color}`
+  }
+
+  private buildPiece = ({
+    square,
+    type,
+    color,
+  }: {
+    square: Square
+    type: PieceSymbol
+    color: Color
+  }): Piece => {
+    return {
+      piece: `${color}-${type}`,
+      key: this.buildKey({ square, type, color }),
+      position: square,
+      type,
+      color,
+    }
+  }
+
+  private removePieceBySquare = (square: Square) => {
+    this.pieces.filter((p) => p.position != square)
+    this.derivePieces()
+  }
+
+  private updatePiecePosition = (from: Square, to: Square) => {
+    this.pieces = this.pieces.map((p) => {
+      if (p.position != from) return p
+      console.log(to)
+      return {
+        ...p,
+        position: to,
+      }
+    })
+    this.derivePieces()
+  }
+
+  private derivePieces = () => {
+    this.piecesBySquare = {}
+    for (const piece of this.pieces) {
+      this[piece.position] = piece
+    }
+  }
+
+  private addMissingPieces = () => {
+    const localPieces = super
+      .board()
+      .map((r) =>
+        r.map((s) => {
+          if (!s) return null
+          return this.buildPiece(s)
+        }),
+      )
+      .flat()
+      .filter(Boolean) as Piece[]
+    for (const piece of localPieces) {
+      if (this.piecesBySquare[piece.position]) continue
+      this.piecesBySquare[piece.position] = piece
+      this.pieces.push(piece)
+    }
+    this.derivePieces()
+  }
+
+  reset = () => {
+    super.reset()
+    const board = super.board()
+    this.pieces = []
+    for (const rank of board) {
+      for (const square of rank) {
+        if (!square) continue
+        this.pieces.push(this.buildPiece(square))
+      }
+    }
+  }
+
+  applyMove = (move: LocalMove | string) => {
+    const moveResult = super.move(move)
+    if (moveResult.captured) {
+      this.removePieceBySquare(moveResult.to)
+    }
+    this.updatePiecePosition(moveResult.from, moveResult.to)
+    return
+  }
+
+  applyPreMove = (move: LocalMove) => {
+    this.removePieceBySquare(move.from as Square)
+    this.updatePiecePosition(move.from as Square, move.to as Square)
+    this.preMoves.push(move)
+  }
+
+  getPieces = (): Piece[] => {
+    return this.pieces
+  }
+
+  undo = () => {
+    const move = super.undo()
+    if (move) {
+      this.undoedMoves.push(move)
+      this.updatePiecePosition(move.to, move.from)
+      if (!move.captured) return move
+      this.addMissingPieces()
+    }
+    return move
+  }
+  redo = () => {
+    for (const move of this.undoedMoves) {
+      this.applyMove(move)
+    }
+  }
+}

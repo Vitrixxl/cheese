@@ -24,7 +24,6 @@ export default function MotionContainer({
       }}
       transition={{
         delay,
-        type: 'spring',
       }}
       className={cn('min-h-0 min-w-0', className)}
     >
